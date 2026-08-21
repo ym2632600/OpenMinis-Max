@@ -535,12 +535,12 @@ class OpenAIProvider private constructor(
     }
 
     /**
-     * Non-streaming entry point. Some providers (e.g. GPT-5.x via certain
-     * gateways, Codex Responses backend) reject `stream=false` outright with
-     * `[400] Stream must be set to true`. To keep this method usable across
-     * all providers we always issue a streaming request internally and
-     * concatenate the deltas back into a single [LLMResponse]. Callers that
-     * actually want incremental delivery should use [streamMessage] instead.
+     * Non-streaming entry point. Chat Completions API-key providers use the
+     * native JSON response (`stream=false`) so request inspection and ordinary
+     * gateways behave as expected. OAuth/Responses providers that reject
+     * `stream=false` continue to use streaming internally and concatenate the
+     * deltas back into a single [LLMResponse]. Callers that actually want
+     * incremental delivery should use [streamMessage] instead.
      */
     override suspend fun sendMessageClamped(
         messages: List<LLMMessage>,
@@ -551,6 +551,7 @@ class OpenAIProvider private constructor(
         tools: List<AgentToolDefinition>,
         thinkingLevel: ThinkingLevel,
     ): LLMResponse = withContext(Dispatchers.IO) {
+        val effectiveThinkingLevel = clampThinkingLevel(thinkingLevel)
         val textBuf = StringBuilder()
         var stopReason: String? = null
         var usage: LLMUsage? = null
@@ -559,14 +560,15 @@ class OpenAIProvider private constructor(
         // minis-model-use (ModelUseOffloadHandler) — get them on
         // LLMResponse.mediaAttachments and can write the image to --output.
         val media = mutableListOf<LLMMediaAttachment>()
-        streamMessage(
+        rawStreamMessage(
             messages = messages,
             systemPrompt = systemPrompt,
             maxTokens = maxTokens,
             temperature = temperature,
             imageParts = imageParts,
             tools = tools,
-            thinkingLevel = thinkingLevel,
+            thinkingLevel = effectiveThinkingLevel,
+            stream = !usesChatCompletionsAPI || isOAuth,
         ).collect { chunk ->
             when (chunk) {
                 is LLMStreamChunk.Text -> textBuf.append(chunk.text)
@@ -587,9 +589,12 @@ class OpenAIProvider private constructor(
         imageParts: List<LLMMessage.ImagePart>,
         tools: List<AgentToolDefinition>,
         thinkingLevel: ThinkingLevel,
-    ): Flow<LLMStreamChunk> = rawStreamMessage(
-        messages, systemPrompt, maxTokens, temperature, imageParts, tools, thinkingLevel,
-    ).failOnSilentEmptyCompletion(name)
+    ): Flow<LLMStreamChunk> {
+        val effectiveThinkingLevel = clampThinkingLevel(thinkingLevel)
+        return rawStreamMessage(
+            messages, systemPrompt, maxTokens, temperature, imageParts, tools, effectiveThinkingLevel,
+        ).failOnSilentEmptyCompletion(name)
+    }
 
     private fun rawStreamMessage(
         messages: List<LLMMessage>,
@@ -599,6 +604,7 @@ class OpenAIProvider private constructor(
         imageParts: List<LLMMessage.ImagePart>,
         tools: List<AgentToolDefinition>,
         thinkingLevel: ThinkingLevel,
+        stream: Boolean = true,
     ): Flow<LLMStreamChunk> = callbackFlow {
         val body = if (isCodexImageModel) {
             // [T-gpt-image2-codex-backend-route-android] gpt-image-2 on an
@@ -625,7 +631,7 @@ class OpenAIProvider private constructor(
             )
             buildCodexImageBody(messages)
         } else if (usesChatCompletionsAPI) {
-            buildRequestBody(messages, systemPrompt, maxTokens, stream = true, temperature = temperature, imageParts = imageParts, tools = tools, thinkingLevel = thinkingLevel)
+            buildRequestBody(messages, systemPrompt, maxTokens, stream = stream, temperature = temperature, imageParts = imageParts, tools = tools, thinkingLevel = thinkingLevel)
         } else {
             buildResponsesAPIBody(messages, systemPrompt, maxTokens, stream = true, imageParts = imageParts, tools = tools, thinkingLevel = thinkingLevel)
         }
@@ -816,6 +822,73 @@ class OpenAIProvider private constructor(
                     responseStatusCode = response.code,
                 )
             )
+        }
+
+        val responseContentType = response.header("Content-Type").orEmpty().lowercase()
+        if (!responseContentType.contains("text/event-stream")) {
+            // Chat Completions API-key requests use stream=false. Keep this
+            // branch explicit instead of feeding a JSON body to the SSE parser;
+            // gateways and MockWebServer commonly omit the event-stream header.
+            send(LLMStreamChunk.Started)
+            try {
+                val payload = JSONObject(response.body?.string().orEmpty())
+                if (usesChatCompletionsAPI) {
+                    val choice = payload.optJSONArray("choices")?.optJSONObject(0)
+                    val message = choice?.optJSONObject("message")
+                    message?.optString("content", "")
+                        ?.takeIf { it.isNotEmpty() }
+                        ?.let { send(LLMStreamChunk.Text(it)) }
+                    message?.optString("reasoning_content", "")
+                        ?.takeIf { it.isNotEmpty() }
+                        ?.let { send(LLMStreamChunk.ReasoningContent(it)) }
+
+                    message?.optJSONArray("tool_calls")?.let { calls ->
+                        for (index in 0 until calls.length()) {
+                            val call = calls.optJSONObject(index) ?: continue
+                            val function = call.optJSONObject("function") ?: continue
+                            val id = call.optString("id", "").ifEmpty { "call_$index" }
+                            val name = function.optString("name", "")
+                            if (name.isEmpty()) continue
+                            val args = try {
+                                JSONObject(function.optString("arguments", "{}"))
+                            } catch (_: Exception) {
+                                JSONObject()
+                            }
+                            send(LLMStreamChunk.ToolUseStart(id, name))
+                            send(LLMStreamChunk.ToolCallComplete(id, name, args))
+                        }
+                    }
+
+                    payload.optJSONObject("usage")?.let {
+                        send(LLMStreamChunk.Usage(parseChatCompletionsUsage(it)))
+                    }
+                    choice?.optString("finish_reason", "")
+                        ?.takeIf { it.isNotEmpty() }
+                        ?.let { send(LLMStreamChunk.Finished(it)) }
+                } else {
+                    // Defensive fallback for a Responses endpoint that returns
+                    // one JSON object despite `stream=true`.
+                    payload.optString("output_text", "")
+                        .takeIf { it.isNotEmpty() }
+                        ?.let { send(LLMStreamChunk.Text(it)) }
+                    payload.optJSONObject("usage")?.let {
+                        send(LLMStreamChunk.Usage(parseResponsesAPIUsage(it)))
+                    }
+                    payload.optString("status", "")
+                        .takeIf { it.isNotEmpty() }
+                        ?.let { send(LLMStreamChunk.Finished(it)) }
+                }
+            } catch (e: Exception) {
+                cancel("Non-stream response parse error", mapError(e))
+                return@callbackFlow
+            } finally {
+                response.close()
+            }
+            channel.close()
+            awaitClose {
+                try { call.cancel() } catch (_: Exception) {}
+            }
+            return@callbackFlow
         }
 
         val reader = BufferedReader(InputStreamReader(response.body!!.byteStream()))
@@ -2304,16 +2377,12 @@ class OpenAIProvider private constructor(
         val cacheRead = usage.optJSONObject("prompt_tokens_details")
             ?.optInt("cached_tokens")?.takeIf { it > 0 }
             ?: usage.optInt("prompt_cache_hit_tokens", 0).takeIf { it > 0 }
-        // OpenAI/DeepSeek `prompt_tokens` is the FULL input (cached + fresh), so
-        // subtract the cached portion to keep `inputTokens` meaning fresh-only —
-        // matching the Anthropic convention. Otherwise the cached tokens are
-        // counted twice in `input + cacheRead` (deflates the cache-hit rate;
-        // DeepSeek 99% hit showed as ~48%). Guard: only subtract when it stays
-        // non-negative; no cache field (cacheRead == null) → unchanged.
-        // latestContextTokens stays the full prompt (that IS the context size).
-        val freshInput = cacheRead?.let { (promptTokens - it).takeIf { d -> d >= 0 } } ?: promptTokens
+        // Keep `inputTokens` equal to the provider-reported prompt total.
+        // Cached input is exposed separately through `cacheReadInputTokens`;
+        // callers and the Android usage UI use the total for context accounting
+        // and must not silently see a reduced prompt count.
         return LLMUsage(
-            inputTokens = freshInput,
+            inputTokens = promptTokens,
             outputTokens = usage.optInt("completion_tokens", 0),
             cacheReadInputTokens = cacheRead,
             latestContextTokens = promptTokens,
@@ -3153,10 +3222,10 @@ class OpenAIProvider private constructor(
         ThinkingLevel.MEDIUM -> "medium"
         ThinkingLevel.HIGH -> "high"
         ThinkingLevel.XHIGH -> "xhigh"
-        // [T-android-thinking-level-arch] MAX → "max"; ULTRA also → "max" —
-        // the Responses/Codex endpoint rejects a literal "ultra"; ultra is a
-        // client-side "Max + orchestration" concept only (mirrors iOS).
-        ThinkingLevel.MAX, ThinkingLevel.ULTRA -> "max"
+        // MAX/ULTRA are client-side "Max + orchestration" tiers. This Android
+        // wire contract tops out at xhigh; keep parity with the historical
+        // request shape and the thinking-wire golden snapshot.
+        ThinkingLevel.MAX, ThinkingLevel.ULTRA -> "xhigh"
     }
 
     /**

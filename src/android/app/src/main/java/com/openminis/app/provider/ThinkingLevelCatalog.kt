@@ -18,9 +18,9 @@ object ThinkingLevelCatalog {
 
     private val rules: List<Rule> = listOf(
         // GPT-5.6 family: sol / terra / luna all reach MAX. ULTRA is a
-        // client-side "Max + orchestration" concept, never a wire effort — the
-        // effort layer maps both MAX and ULTRA to "max". Keep in lockstep with
-        // iOS ThinkingLevelCatalog.swift.
+        // client-side "Max + orchestration" concept, never a literal wire tier —
+        // the Android effort layer maps MAX and ULTRA to its xhigh wire ceiling.
+        // Keep the model ceiling in lockstep with iOS ThinkingLevelCatalog.swift.
         Rule({ it.startsWith("gpt-5.6-sol") || it.startsWith("gpt-5.6-terra") }, ThinkingLevel.MAX),
         Rule({ it.startsWith("gpt-5.6-luna") }, ThinkingLevel.MAX),
         Rule({ it.startsWith("gpt-5.5") }, ThinkingLevel.XHIGH),

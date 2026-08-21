@@ -367,7 +367,8 @@ class ThinkingRulesRegressionTest {
 
     /**
      * Rule: ULTRA is a client-side "Max + orchestration" concept and must NEVER reach a
-     * backend as the literal string "ultra" — both MAX and ULTRA map to "max".
+     * backend as the literal string "ultra" — Android's wire ceiling maps MAX/ULTRA to
+     * the supported `xhigh` tier for this model family.
      * evidence §A "[GPT-5.6 / ULTRA]" · b38bf3d5.
      */
     @Test
