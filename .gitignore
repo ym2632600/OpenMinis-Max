@@ -65,6 +65,10 @@ Package.resolved
 # macOS
 .DS_Store
 
+# Python test/runtime bytecode
+__pycache__/
+*.py[cod]
+
 # Environment and secrets
 .env
 .env.*

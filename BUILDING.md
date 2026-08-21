@@ -30,6 +30,27 @@ git submodule update --init --recursive
 | `deps/ish` | [OpenMinis/ish-arm64](https://github.com/OpenMinis/ish-arm64) | iOS sandbox kernel |
 | `deps/proot` | [OpenMinis/proot](https://github.com/OpenMinis/proot) | Android sandbox |
 
+### Read-only preflight check
+
+Before starting a platform build, run the read-only preflight check from the repository root. It verifies the required project files, recursively initialized submodules, host commands, toolchain environment variables, and generated native artifacts without downloading or modifying anything:
+
+```sh
+./scripts/preflight.py --platform android
+./scripts/preflight.py --platform ios
+```
+
+Use `--platform all` to inspect both targets. A missing generated artifact is reported as a warning because the platform build scripts are responsible for creating it. Missing required tools, files, or submodules are reported as failures. For CI, `--strict` also turns warnings into a non-zero exit code, and `--json` emits machine-readable output:
+
+```sh
+./scripts/preflight.py --platform android --strict --json
+```
+
+The script is intentionally safe to run on a clean clone: it never writes configuration files, downloads dependencies, or changes the working tree. Its own regression tests run with the Python standard library:
+
+```sh
+python3 -m unittest discover -s scripts -p 'test_preflight.py'
+```
+
 ### Build-time customization
 
 Some values are injected at build time and are **not** in this repository.
