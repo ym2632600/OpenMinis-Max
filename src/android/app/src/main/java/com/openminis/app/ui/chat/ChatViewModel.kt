@@ -62,6 +62,7 @@ import com.openminis.app.offload.OffloadPermissionManager
 import com.openminis.app.service.SessionActivityTracker
 import com.openminis.app.service.SessionConcurrencyManager
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
@@ -78,6 +79,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.yield
 import org.json.JSONObject
 import java.io.ByteArrayOutputStream
@@ -6753,6 +6755,7 @@ class ChatViewModel(
             // callbackFlow wraps throws into CancellationException(cause=LLMError),
             // so we catch at collect level and unwrap.
             var collectDone = false
+            var timedOut = false
             var retryAttempt = 0  // per-turn auto-retry counter (resets on each new turn)
             while (!collectDone) {
                 try {
@@ -6767,12 +6770,13 @@ class ChatViewModel(
                     // [_compactSummary] is prepended as a `<context-summary>`
                     // user message. Falls through to the raw agentHistory when
                     // no compact has happened, so the common path stays zero-copy.
-                    currentProvider.streamMessage(
-                        applyRequestImageBudget(effectiveAgentHistory()),
-                        systemPrompt, dynamicMaxTokens(currentProvider, lastContextTokens),
-                        tools = agentTools,
-                        thinkingLevel = if (currentModelSupportsReasoning) _thinkingLevel.value else ThinkingLevel.OFF,
-                    ).collect { chunk ->
+                    withTimeout(AgentLifecyclePolicy.MODEL_TURN_TIMEOUT_MS) {
+                        currentProvider.streamMessage(
+                            applyRequestImageBudget(effectiveAgentHistory()),
+                            systemPrompt, dynamicMaxTokens(currentProvider, lastContextTokens),
+                            tools = agentTools,
+                            thinkingLevel = if (currentModelSupportsReasoning) _thinkingLevel.value else ThinkingLevel.OFF,
+                        ).collect { chunk ->
                 when (chunk) {
                     is LLMStreamChunk.ThinkingDelta -> {
                         turnThinking.append(chunk.text)
@@ -7097,7 +7101,8 @@ class ChatViewModel(
                         // loop compiles with the new chunk variant.
                     }
                 }
-                    }  // end collect
+                        }  // end collect
+                    }  // end model-turn timeout guard
                     // T94 fix 2: flush any text that landed in the throttle
                     // window after the last UI tick. The retry-rollback /
                     // turn-finalize paths below assume _messages reflects all
@@ -7127,8 +7132,25 @@ class ChatViewModel(
                         _autoRetryCountdown.value = 0
                     }
                 } catch (e: Exception) {
-                    if (e is CancellationException && e.cause == null) throw e  // real job cancellation
-                    val actual = unwrapFlowException(e)
+                    if (e is TimeoutCancellationException) {
+                        timedOut = true
+                        collectDone = true
+                        AppLogger.warning(
+                            TAG_STREAM,
+                            "model turn timed out after ${AgentLifecyclePolicy.MODEL_TURN_TIMEOUT_MS / 60_000} minutes " +
+                                "(model=${currentProvider.model.id}, turn=$turn)",
+                        )
+                        withContext(Dispatchers.Main) {
+                            setInlineError(
+                                context.getString(
+                                    R.string.error_model_turn_timeout,
+                                    AgentLifecyclePolicy.MODEL_TURN_TIMEOUT_MS / 60_000,
+                                ),
+                            )
+                        }
+                    } else {
+                        if (e is CancellationException && e.cause == null) throw e  // real job cancellation
+                        val actual = unwrapFlowException(e)
                     val isRateLimit = actual is com.openminis.app.data.model.LLMError.RateLimited
                     val is5xx = actual is com.openminis.app.data.model.LLMError.ProviderError &&
                         actual.detail.contains(Regex("[5][0-9]{2}"))
@@ -7329,9 +7351,17 @@ class ChatViewModel(
                             }
                         }
                         throw actual  // re-throw unwrapped, all fallbacks exhausted
+                        }
                     }
                 }
             }  // end while (!collectDone)
+
+            if (timedOut) {
+                // A provider timeout is a deliberate lifecycle termination,
+                // not evidence that the agent exhausted MAX_AGENT_TURNS.
+                loopExitedNormally = true
+                break
+            }
 
             // T307: materialise the per-turn StringBuilder ONCE at the
             // turn boundary. After this point everything is plain String

@@ -15,21 +15,22 @@ object TerminalSanitizer {
     )
 
     /**
-     * Sanitize terminal output in two passes:
-     * 1. CR folding — simulate carriage return overwriting
-     * 2. Strip remaining ANSI/VT escape sequences
+     * Sanitize terminal output in three passes:
+     * 1. Strip ANSI/VT escape sequences so they do not affect visible columns.
+     * 2. CR folding — simulate carriage return overwriting on visible text.
+     * 3. Remove non-printable control bytes and known pipe artifacts.
      */
     fun sanitize(raw: String): String {
         if (raw.isEmpty()) return raw
 
-        // Pass 1: CR folding
-        val crFolded = foldCarriageReturns(raw)
+        // Strip ANSI before CR folding: escape bytes have no terminal width.
+        val ansiStripped = ANSI_REGEX.replace(raw, "")
 
-        // Pass 2: Strip ANSI sequences
-        val stripped = ANSI_REGEX.replace(crFolded, "")
+        // Fold carriage returns over the visible text.
+        val crFolded = foldCarriageReturns(ansiStripped)
 
-        // Pass 3: Remove null bytes and non-printable control chars (except \n \t)
-        val cleaned = stripped.filter { it == '\n' || it == '\t' || it.code >= 0x20 }
+        // Remove null bytes and non-printable control chars (except \n \t).
+        val cleaned = crFolded.filter { it == '\n' || it == '\t' || it.code >= 0x20 }
 
         // Pass 4: Remove "null" artifacts from PRoot/pipe issues
         // - Lines that are entirely "null"
@@ -41,7 +42,7 @@ object TerminalSanitizer {
             .replace(Regex("(?:null){2,}"), "") // Remove runs of 2+ consecutive "null"
 
         // Pass 5: Collapse excessive blank lines (3+ consecutive → 2)
-        return noNullLines.replace(Regex("\n{3,}"), "\n\n").trim()
+        return noNullLines.replace(Regex("\n{3,}"), "\n\n").trimEnd('\n')
     }
 
     /**
@@ -75,13 +76,23 @@ object TerminalSanitizer {
                 continue
             }
 
-            // Split on CR and simulate overwriting.
-            // Each CR resets cursor to column 0. The last non-empty segment wins.
-            val segments = line.split('\r')
-            val lastNonEmpty = segments.lastOrNull { it.isNotEmpty() }
-            if (lastNonEmpty != null) {
-                result.append(lastNonEmpty)
+            // Split on CR and simulate a terminal cursor. Each CR resets
+            // the cursor to column 0; subsequent characters overwrite the
+            // existing line while preserving any untouched suffix.
+            val buffer = StringBuilder()
+            var cursor = 0
+            for (segment in line.split('\r')) {
+                for (character in segment) {
+                    if (cursor < buffer.length) {
+                        buffer[cursor] = character
+                    } else {
+                        buffer.append(character)
+                    }
+                    cursor += 1
+                }
+                cursor = 0
             }
+            result.append(buffer)
         }
 
         return result.toString()

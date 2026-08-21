@@ -638,9 +638,10 @@ object ThinkingRuleResolver {
         ThinkingLevel.MEDIUM -> "medium"
         ThinkingLevel.HIGH -> "high"
         ThinkingLevel.XHIGH -> "xhigh"
-        // ULTRA is a client-side "Max + orchestration" concept and is NEVER a valid
-        // server effort string (iOS b38bf3d5).
-        ThinkingLevel.MAX, ThinkingLevel.ULTRA -> "max"
+        // MAX/ULTRA are client-side "Max + orchestration" tiers. The OpenAI-style
+        // wire ladder tops out at xhigh; provider-specific Anthropic/Gemini shapes
+        // handle their own max semantics elsewhere.
+        ThinkingLevel.MAX, ThinkingLevel.ULTRA -> "xhigh"
     }
 
     /**

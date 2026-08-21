@@ -22,6 +22,16 @@ val appCustomization = Properties().apply {
 fun customizationValue(key: String): String =
     (appCustomization.getProperty(key) ?: "").replace("\"", "\\\"")
 
+// Public-repository unit tests exercise the OAuth request shape but must not
+// require the private production prompt. Keep the runtime failure for normal
+// debug/release builds; only test tasks receive a deterministic non-secret
+// fixture value.
+val isUnitTestTask = gradle.startParameter.taskNames.any { taskName ->
+    taskName.substringAfterLast(":").startsWith("test", ignoreCase = true)
+}
+val oauthPromptForBuild = customizationValue("ANTHROPIC_OAUTH_IDENTIFIER_PROMPT")
+    .ifEmpty { if (isUnitTestTask) "test-claude-code-oauth-prefix" else "" }
+
 android {
     namespace = "com.openminis.app"
     // [T-android-dynamic-island] Bumped 35→36 so the Android 16 (Baklava)
@@ -46,7 +56,7 @@ android {
         buildConfigField(
             "String",
             "ANTHROPIC_OAUTH_IDENTIFIER_PROMPT",
-            "\"${customizationValue("ANTHROPIC_OAUTH_IDENTIFIER_PROMPT")}\""
+            "\"$oauthPromptForBuild\""
         )
 
         ndk {
