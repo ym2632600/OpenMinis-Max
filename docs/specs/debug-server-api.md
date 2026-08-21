@@ -4,11 +4,32 @@ MinisApp includes a built-in JSON-RPC 2.0 debug server (DEBUG builds only) for r
 
 ## Connection
 
-The server listens on **`http://localhost:8321`** and accepts only **POST** requests with `Content-Type: application/json`.
+The server listens on **`http://localhost:8321`**. It exposes read-only `GET` endpoints for health, schema, and the bundled skill; JSON-RPC requests use `POST` with `Content-Type: application/json`.
 
 ## Protocol
 
 All requests follow the [JSON-RPC 2.0](https://www.jsonrpc.org/specification) specification:
+
+### `GET /health`
+
+The unauthenticated health endpoint is intended for local clients and foreground-restart diagnostics. It does not expose credentials or RPC data. A successful HTTP response means the TCP listener accepted the request; `rpc_ready` indicates whether the inspector/RPC actor has finished initialization.
+
+```json
+{
+  "auth_required": false,
+  "ok": true,
+  "rpc_ready": true,
+  "service": "debug-server",
+  "uptime_ms": 1234,
+  "version": "1.12"
+}
+```
+
+Use it before sending an authenticated envelope or after the app returns to the foreground:
+
+```bash
+curl -fsS http://localhost:8321/health | python3 -m json.tool
+```
 
 ```json
 {

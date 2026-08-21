@@ -8,6 +8,7 @@ final class DebugServer: @unchecked Sendable {
     private var listenSocket: Int32 = -1
     private var stopped = false
     private var rpc: DebugJSONRPC?
+    private var startedAt = Date()
 
     func start(port: UInt16 = 8321) throws {
         let fd = socket(AF_INET, SOCK_STREAM, 0)
@@ -42,6 +43,7 @@ final class DebugServer: @unchecked Sendable {
         }
 
         self.listenSocket = fd
+        self.startedAt = Date()
         print("[DebugServer] Listening on http://0.0.0.0:\(port)")
 
         // Initialize inspector + RPC on main actor, then start accept loop
@@ -157,6 +159,31 @@ final class DebugServer: @unchecked Sendable {
             "rpc":"jsonrpc-2.0","auth":"\(auth.authRequired ? "v1" : "off")",\
             "pair_path":"/pair","rpc_path":"/rpc","skill_path":"/skill"}
             """
+        }
+
+        func healthJSON() -> String {
+            let info = Bundle.main.infoDictionary ?? [:]
+            let payload: [String: Any] = [
+                "ok": true,
+                "service": "debug-server",
+                "version": info["CFBundleShortVersionString"] as? String ?? "?",
+                "rpc_ready": rpc != nil,
+                "auth_required": auth.authRequired,
+                "uptime_ms": max(0, Int(Date().timeIntervalSince(self.startedAt) * 1000)),
+            ]
+            guard let data = try? JSONSerialization.data(withJSONObject: payload, options: [.sortedKeys]),
+                  let text = String(data: data, encoding: .utf8) else {
+                return "{\"ok\":false,\"service\":\"debug-server\",\"error\":\"serialization_failed\"}"
+            }
+            return text
+        }
+
+        // Unauthenticated liveness/readiness check. It exposes no secrets and
+        // lets clients distinguish a live socket from an RPC-ready server.
+        if method == "GET" && path == "/health" {
+            sendResponse(fd, status: "200 OK", body: healthJSON())
+            close(fd)
+            return
         }
 
         // Unauthenticated capability discovery — lets clients detect the

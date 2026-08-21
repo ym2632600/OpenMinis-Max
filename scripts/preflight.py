@@ -147,9 +147,8 @@ def submodule_checks(root: Path) -> list[Check]:
                 checks.append(
                     Check(
                         f"submodule:{path}",
-                        "warn",
+                        "pass",
                         "submodule is intentionally disabled with update=none",
-                        "initialize it only when building the iSH component that requires the Linux source tree",
                     )
                 )
             else:
@@ -309,12 +308,13 @@ def ios_checks(root: Path) -> list[Check]:
     return checks
 
 
-def build_report(root: Path, target: str) -> Report:
+def build_report(root: Path, target: str, scope: str = "full") -> Report:
     checks = common_checks(root)
-    if target in {"android", "all"}:
-        checks.extend(android_checks(root))
-    if target in {"ios", "all"}:
-        checks.extend(ios_checks(root))
+    if scope == "full":
+        if target in {"android", "all"}:
+            checks.extend(android_checks(root))
+        if target in {"ios", "all"}:
+            checks.extend(ios_checks(root))
     return Report(str(root), target, checks)
 
 
@@ -345,6 +345,12 @@ def main(argv: Iterable[str] | None = None) -> int:
         default="all",
         help="build target to validate (default: all)",
     )
+    parser.add_argument(
+        "--scope",
+        choices=("full", "structure"),
+        default="full",
+        help="validate toolchains/artifacts (full) or source structure only (structure)",
+    )
     parser.add_argument("--json", action="store_true", help="emit machine-readable JSON")
     parser.add_argument(
         "--strict",
@@ -353,7 +359,7 @@ def main(argv: Iterable[str] | None = None) -> int:
     )
     args = parser.parse_args(list(argv) if argv is not None else None)
 
-    report = build_report(repo_root(), args.platform)
+    report = build_report(repo_root(), args.platform, args.scope)
     if args.json:
         payload = asdict(report)
         payload["summary"] = {
