@@ -7,8 +7,35 @@ import com.openminis.app.sandbox.PRootKernel
 import org.json.JSONObject
 import java.io.File
 
+internal data class FileReadOptions(
+    val offset: Int,
+    val maxLength: Int,
+    val direction: String,
+    val requestedLines: Int?,
+)
+
 object FileReadTool {
     const val NAME = "file_read"
+    internal const val DEFAULT_MAX_LENGTH = 15_000
+    internal const val MAX_LENGTH_HARD_CAP = 80_000
+
+    internal fun parseOptions(args: JSONObject): Result<FileReadOptions> {
+        return runCatching {
+            val offset = args.optInt("offset", 1).coerceAtLeast(1)
+            val requestedMaxLength = args.optInt("max_length", DEFAULT_MAX_LENGTH)
+            require(requestedMaxLength > 0) { "'max_length' must be greater than zero" }
+            val maxLength = requestedMaxLength.coerceAtMost(MAX_LENGTH_HARD_CAP)
+            val direction = args.optString("direction", "head").lowercase()
+            require(direction == "head" || direction == "tail") {
+                "'direction' must be 'head' or 'tail'"
+            }
+            val requestedLines = if (args.has("lines")) args.optInt("lines") else null
+            require(requestedLines == null || requestedLines > 0) {
+                "'lines' must be greater than zero"
+            }
+            FileReadOptions(offset, maxLength, direction, requestedLines)
+        }
+    }
 
     fun definition(): AgentToolDefinition = AgentToolDefinition(
         name = NAME,
@@ -30,21 +57,16 @@ object FileReadTool {
             val args = JSONObject(argsJson)
             val path = args.optString("path", "")
             val toolTitle = args.optString("tool_title", NAME)
-            val offset = args.optInt("offset", 1).coerceAtLeast(1)
-            // T-FILEREAD-CAP: hard upper bound on returned content length.
-            // Pre-cap, the agent could ask for `max_length=1_000_000` and we
-            // would happily inline a 400 KB base64 image into a tool_result —
-            // which then renders as a single user-message bubble and locks
-            // up Compose's StaticLayout / LineBreaker for tens of seconds
-            // (see HangDetector report for session
-            // e84882d7-2087-47f8-9300-ff2c897fe0b4: 820 KB partsJson, 43 s
-            // hang in nComputeLineBreaks). Cap at 80 KB regardless of
-            // requested value; the truncation tail below tells the agent the
-            // full file size so it can paginate with offset/lines if needed.
-            // iOS mirrors this cap in AIChatViewModel.executeFileRead.
-            val MAX_LENGTH_HARD_CAP = 80_000
-            val maxLength = args.optInt("max_length", 15000).coerceAtMost(MAX_LENGTH_HARD_CAP)
-            val direction = args.optString("direction", "head")
+            val options = parseOptions(args).getOrElse { error ->
+                return ToolExecutionResult(
+                    "Error: ${error.message}",
+                    false,
+                    toolTitle = toolTitle,
+                )
+            }
+            val offset = options.offset
+            val maxLength = options.maxLength
+            val direction = options.direction
 
             if (path.isBlank()) {
                 return ToolExecutionResult("Error: 'path' is required", false, toolTitle = toolTitle)
@@ -80,8 +102,7 @@ object FileReadTool {
 
             val allLines = file.readLines()
             val totalLines = allLines.size
-
-            val requestedLines = if (args.has("lines")) args.optInt("lines") else null
+            val requestedLines = options.requestedLines
 
             val selectedLines = if (direction == "tail") {
                 val count = requestedLines ?: totalLines

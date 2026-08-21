@@ -1,9 +1,19 @@
 #!/usr/bin/env python3
+import os
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
-from preflight import Check, Report, check_path, exit_code, optional_submodule_paths
+from preflight import (
+    Check,
+    Report,
+    check_android_ndk,
+    check_android_sdk_command,
+    check_path,
+    exit_code,
+    optional_submodule_paths,
+)
 
 
 class PreflightTests(unittest.TestCase):
@@ -32,6 +42,26 @@ class PreflightTests(unittest.TestCase):
                 encoding="utf-8",
             )
             self.assertEqual(optional_submodule_paths(root), {"deps/ish/deps/linux"})
+
+    def test_android_tools_are_discovered_inside_sdk(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            cmake = root / "cmake" / "3.22.1" / "bin" / "cmake"
+            cmake.parent.mkdir(parents=True)
+            cmake.write_text("#!/bin/sh\n", encoding="utf-8")
+            cmake.chmod(cmake.stat().st_mode | 0o111)
+            (root / "ndk" / "28.0.13004108").mkdir(parents=True)
+            with patch.dict(os.environ, {"ANDROID_SDK_ROOT": str(root)}, clear=True):
+                with patch("preflight.shutil.which", return_value=None):
+                    cmake_check = check_android_sdk_command(
+                        "cmake",
+                        "cmake/3.22.1/bin/cmake",
+                        required=True,
+                        detail="JNI native build",
+                    )
+                    ndk_check = check_android_ndk()
+            self.assertEqual(cmake_check.status, "pass")
+            self.assertEqual(ndk_check.status, "pass")
 
     def test_clean_report_passes(self) -> None:
         report = Report("/repo", "android", [Check("example", "pass", "ok")])

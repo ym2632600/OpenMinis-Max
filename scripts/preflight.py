@@ -185,6 +185,61 @@ def submodule_checks(root: Path) -> list[Check]:
     return checks
 
 
+def sdk_roots() -> list[Path]:
+    roots: list[Path] = []
+    for name in ("ANDROID_SDK_ROOT", "ANDROID_HOME"):
+        value = os.environ.get(name)
+        if value:
+            candidate = Path(value).expanduser()
+            if candidate.exists() and candidate not in roots:
+                roots.append(candidate)
+    return roots
+
+
+def check_android_sdk_command(
+    name: str,
+    relative_path: str,
+    *,
+    required: bool,
+    detail: str,
+) -> Check:
+    resolved = shutil.which(name)
+    if resolved:
+        return Check(f"command:{name}", "pass", f"{resolved} ({detail})")
+
+    for root in sdk_roots():
+        candidate = root / relative_path
+        if candidate.is_file() and os.access(candidate, os.X_OK):
+            return Check(f"command:{name}", "pass", f"{candidate} ({detail}, Android SDK)")
+
+    status = "fail" if required else "warn"
+    return Check(
+        f"command:{name}",
+        status,
+        "command not found on PATH or in the configured Android SDK",
+        f"install or expose {name} on PATH, or install it under the Android SDK",
+    )
+
+
+def check_android_ndk() -> Check:
+    for name in ("ANDROID_NDK_HOME", "ANDROID_NDK_ROOT"):
+        value = os.environ.get(name)
+        if value and (candidate := Path(value).expanduser()).is_dir():
+            return Check(f"environment:{name}", "pass", f"{candidate} (Android NDK)")
+
+    candidates = [candidate for root in sdk_roots() for candidate in (root / "ndk").glob("*") if candidate.is_dir()]
+    if candidates:
+        selected = sorted(candidates, key=lambda candidate: candidate.name, reverse=True)[0]
+        return Check("environment:ANDROID_NDK", "pass", f"{selected} (side-by-side Android NDK)")
+
+    return Check(
+        "environment:ANDROID_NDK",
+        "fail",
+        "Android NDK was not found through ANDROID_NDK_HOME, ANDROID_NDK_ROOT, or the SDK side-by-side directory",
+        "install NDK r28+ and set ANDROID_NDK_HOME, or configure ANDROID_SDK_ROOT/ANDROID_HOME",
+    )
+
+
 def common_checks(root: Path) -> list[Check]:
     checks = [
         check_command("git", required=True, detail="repository and submodule inspection"),
@@ -205,12 +260,23 @@ def common_checks(root: Path) -> list[Check]:
 
 def android_checks(root: Path) -> list[Check]:
     checks = [
-        check_command("java", required=True, detail="Gradle/Android build"),
-        check_command("cmake", required=True, detail="JNI native build"),
-        check_command("adb", required=False, detail="optional device/instrumented tests"),
+        check_command("java", required=True, detail="Gradle runtime"),
+        check_command("javac", required=True, detail="Gradle Java compiler and unit tests"),
+        check_android_sdk_command(
+            "cmake",
+            "cmake/3.22.1/bin/cmake",
+            required=True,
+            detail="JNI native build",
+        ),
+        check_android_sdk_command(
+            "adb",
+            "platform-tools/adb",
+            required=False,
+            detail="optional device/instrumented tests",
+        ),
         check_environment_path("ANDROID_SDK_ROOT", required=False, detail="Android SDK"),
         check_environment_path("ANDROID_HOME", required=False, detail="Android SDK"),
-        check_environment_path("ANDROID_NDK_HOME", required=True, detail="Android NDK r28+"),
+        check_android_ndk(),
         check_path(root, "src/android/app/src/main/assets/proot-aarch64", required=False),
         check_path(root, "src/android/app/src/main/assets/alpine-minirootfs.tar.gz", required=False),
         check_path(
