@@ -7141,7 +7141,12 @@ class ChatViewModel(
                                 "(model=${currentProvider.model.id}, turn=$turn)",
                         )
                         withContext(Dispatchers.Main) {
-                            setInlineError(AgentLifecyclePolicy.timeoutMessage())
+                            setInlineError(
+                                context.getString(
+                                    R.string.error_model_turn_timeout,
+                                    AgentLifecyclePolicy.MODEL_TURN_TIMEOUT_MS / 60_000,
+                                ),
+                            )
                         }
                     } else {
                         if (e is CancellationException && e.cause == null) throw e  // real job cancellation
