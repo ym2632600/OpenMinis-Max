@@ -1,18 +1,23 @@
 package com.openminis.app.data.repository
 
 import android.database.sqlite.SQLiteBlobTooBigException
+import com.openminis.app.data.db.AppDatabase
 import com.openminis.app.data.db.ChatDao
 import com.openminis.app.data.db.ChatSessionEntity
+import com.openminis.app.data.db.MessageFts
 import com.openminis.app.data.db.FolderEntity
 import com.openminis.app.data.db.MessageEntity
 import com.openminis.app.data.db.MessageHeadRow
 import com.openminis.app.data.model.ModelAttributionSnapshot
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.distinctUntilChanged
 import java.util.UUID
 
-class ChatRepository(internal val dao: ChatDao) {
+class ChatRepository(private val database: AppDatabase) {
+
+    internal val dao: ChatDao = database.chatDao()
 
     fun observeSessions(): Flow<List<ChatSessionEntity>> = dao.observeSessions()
 
@@ -314,6 +319,10 @@ class ChatRepository(internal val dao: ChatDao) {
     suspend fun searchSessionsWithHits(query: String): List<SessionSearchResult> {
         val terms = SessionSearch.searchTerms(query)
         if (terms.isEmpty()) return emptyList()
+        // [A10] Indexed fast path once the FTS backfill has completed; the
+        // LIKE scan below stays as the fallback for the first searches after
+        // an upgrade and for any device where FTS misbehaves.
+        searchSessionsViaFts(terms)?.let { return it }
         val args = SessionSearch.searchArgs(terms)
         var visibleOnly = true
         val rows = try {
@@ -456,8 +465,10 @@ class ChatRepository(internal val dao: ChatDao) {
      * boundary cut to trim the kept assistant row to the parts before the
      * target tool_use. Mirrors iOS ChatStore.updateMessageParts.
      */
-    suspend fun updateMessageParts(id: String, partsJson: String) =
+    suspend fun updateMessageParts(id: String, partsJson: String) {
         dao.updateMessageParts(id, partsJson)
+        reindexMessageForSearch(id, partsJson)
+    }
 
     /** [T-error-persist-android] Set/clear the error sticker on a row by id. */
     suspend fun updateMessageErrorInfo(messageId: String, errorInfo: String?) =
@@ -596,7 +607,8 @@ class ChatRepository(internal val dao: ChatDao) {
             providerType = modelSnapshot?.providerTypeRaw,
             providerInstanceId = modelSnapshot?.providerInstanceId,
         )
-        dao.insertMessage(message)
+        val newRowId = dao.insertMessage(message)
+        indexMessageForSearch(newRowId, sessionId, now, capped)
         // [T-android-preview-flicker-toolresult] Only overwrite the preview
         // when this row actually yields one. A tool-result row is
         // `[{"type":"toolResult",…}]`, a shape extractTextPreview does not
@@ -952,6 +964,205 @@ class ChatRepository(internal val dao: ChatDao) {
         if (start > 0) s = "…$s"
         if (end < text.length) s = "$s…"
         return s
+    }
+
+    // ───────────────── A10: FTS message index ─────────────────
+    //
+    // messages_fts is NOT a Room entity (see MessageFts): created by
+    // MIGRATION_14_15, written with raw SQL here, read through
+    // ChatDao.runFtsSearchQuery. `docid` = the message rowid returned by
+    // insertMessage, so index rows JOIN back to messages 1:1.
+
+    /** Flipped off on the first FTS error so a broken index degrades to LIKE search. */
+    @Volatile
+    private var ftsAvailable = true
+
+    private val ftsMutex = kotlinx.coroutines.sync.Mutex()
+
+    private val ftsDb
+        get() = database.openHelper.writableDatabase
+
+    /** All user-visible text of one message for the FTS index. */
+    internal fun extractSearchableText(partsJson: String): String? {
+        val array = try {
+            org.json.JSONArray(partsJson)
+        } catch (e: Exception) {
+            return null
+        }
+        val sb = StringBuilder()
+        for (i in 0 until array.length()) {
+            val obj = array.optJSONObject(i) ?: continue
+            when (obj.optString("type")) {
+                "text" -> {
+                    val text = obj.optString("value", "")
+                    if (text.isNotBlank()) sb.append(text).append('\n')
+                }
+                "toolUse" -> {
+                    val title = obj.optJSONObject("value")?.optString("title", "").orEmpty()
+                    if (title.isNotBlank()) sb.append(title).append('\n')
+                }
+            }
+            if (sb.length > 8000) break
+        }
+        return if (sb.isEmpty()) null else sb.toString()
+    }
+
+    private fun indexMessageForSearch(rowId: Long, sessionId: String, createdAt: Long, partsJson: String) {
+        if (!ftsAvailable) return
+        val text = extractSearchableText(partsJson) ?: return
+        try {
+            ftsDb.execSQL(
+                "INSERT INTO messages_fts(docid, content, session_id, created_at) VALUES (?,?,?,?)",
+                arrayOf(rowId, text, sessionId, createdAt),
+            )
+        } catch (e: android.database.SQLException) {
+            ftsAvailable = false
+            android.util.Log.w("ChatRepository", "[Search] FTS index write failed (${e.message}) — LIKE search stays")
+        }
+    }
+
+    private fun reindexMessageForSearch(messageId: String, partsJson: String) {
+        if (!ftsAvailable) return
+        try {
+            ftsDb.execSQL(
+                "DELETE FROM messages_fts WHERE docid = (SELECT rowid FROM messages WHERE id = ?)",
+                arrayOf(messageId),
+            )
+            val text = extractSearchableText(partsJson) ?: return
+            ftsDb.execSQL(
+                "INSERT INTO messages_fts(docid, content, session_id, created_at) " +
+                    "SELECT rowid, ?, session_id, created_at FROM messages WHERE id = ?",
+                arrayOf(text, messageId),
+            )
+        } catch (e: android.database.SQLException) {
+            ftsAvailable = false
+            android.util.Log.w("ChatRepository", "[Search] FTS reindex failed (${e.message}) — LIKE search stays")
+        }
+    }
+
+    private fun ftsStateValue(key: String): String? =
+        ftsDb.query("SELECT v FROM messages_fts_state WHERE k = ?", arrayOf<Any?>(key)).use { c ->
+            if (c.moveToFirst()) c.getString(0) else null
+        }
+
+    /**
+     * [A10] Index every not-yet-indexed message, oldest first, then mark
+     * the index complete (the FTS search path stays off until then so a
+     * half-built index can never hide results the LIKE scan would find).
+     * Idempotent: the watermark lives in messages_fts_state, so an
+     * interrupted run resumes where it stopped. Safe to call often — a
+     * completed index makes this one cheap state read.
+     */
+    suspend fun warmSearchIndex() {
+        if (!ftsAvailable) return
+        ftsMutex.withLock {
+            try {
+                if (ftsStateValue("complete") == "1") return@withLock
+                var after = ftsStateValue("backfill_rowid")?.toLongOrNull() ?: 0L
+                while (true) {
+                    val batch = dao.ftsBackfillBatch(after, 250)
+                    if (batch.isEmpty()) break
+                    for (row in batch) {
+                        extractSearchableText(row.partsJson)?.let { text ->
+                            // NOT EXISTS: a message written DURING the
+                            // backfill is indexed live by appendMessage;
+                            // this keeps the backfill from duplicating it.
+                            ftsDb.execSQL(
+                                "INSERT INTO messages_fts(docid, content, session_id, created_at) " +
+                                    "SELECT ?,?,?,? WHERE NOT EXISTS (SELECT 1 FROM messages_fts WHERE docid = ?)",
+                                arrayOf(row.rowid, text, row.sessionId, row.createdAt, row.rowid),
+                            )
+                        }
+                        after = row.rowid
+                    }
+                    ftsDb.execSQL(
+                        "INSERT OR REPLACE INTO messages_fts_state(k, v) VALUES ('backfill_rowid', ?)",
+                        arrayOf<Any?>(after.toString()),
+                    )
+                    if (batch.size < 250) break
+                }
+                // Sweep index rows whose message was deleted before completion.
+                ftsDb.execSQL("DELETE FROM messages_fts WHERE docid NOT IN (SELECT rowid FROM messages)")
+                ftsDb.execSQL("INSERT OR REPLACE INTO messages_fts_state(k, v) VALUES ('complete', '1')")
+            } catch (e: android.database.SQLException) {
+                ftsAvailable = false
+                android.util.Log.w("ChatRepository", "[Search] FTS backfill failed (${e.message}) — LIKE search stays")
+            }
+        }
+    }
+
+    /**
+     * [A10] FTS fast path: sessions with a message whose visible text
+     * matches (indexed lookup), merged with title hits (titles are not in
+     * the index), newest-activity first. Returns null when the index is
+     * unavailable or still backfilling — the caller then runs the LIKE
+     * scan, so results never shrink during the transition.
+     */
+    private suspend fun searchSessionsViaFts(terms: List<String>): List<SessionSearchResult>? {
+        if (!ftsAvailable) return null
+        val complete = try {
+            ftsStateValue("complete") == "1"
+        } catch (e: android.database.SQLException) {
+            ftsAvailable = false
+            return null
+        }
+        if (!complete) return null
+        val match = MessageFts.buildMatchQuery(terms) ?: return null
+        val hits = try {
+            dao.runFtsSearchQuery(
+                androidx.sqlite.db.SimpleSQLiteQuery(MessageFts.SEARCH_SQL, arrayOf<Any>(match)),
+            )
+        } catch (e: android.database.SQLException) {
+            ftsAvailable = false
+            android.util.Log.w("ChatRepository", "[Search] FTS query failed (${e.message}) — LIKE fallback")
+            return null
+        }
+        // Newest hit per session, capped.
+        val snippetBySession = LinkedHashMap<String, String?>()
+        for (h in hits) {
+            if (snippetBySession.size >= 100) break
+            snippetBySession.putIfAbsent(h.sessionId, SessionSearch.searchSnippet(h.partsJson, terms))
+        }
+        // Title hits: titles are not indexed, so search them with LIKE.
+        val titleConds = terms.joinToString(" OR ") { "title LIKE ? ESCAPE '\'" }
+        val titleArgs: Array<Any> = terms.map { SessionSearch.likePattern(it) }.toTypedArray()
+        val titleSessions = try {
+            dao.runSessionsRawQuery(
+                androidx.sqlite.db.SimpleSQLiteQuery(
+                    "SELECT * FROM sessions WHERE $titleConds",
+                    titleArgs,
+                ),
+            )
+        } catch (e: android.database.SQLException) {
+            emptyList()
+        }
+        val hitIds = snippetBySession.keys.toList()
+        val hitSessions = if (hitIds.isEmpty()) {
+            emptyList()
+        } else {
+            val placeholders = hitIds.joinToString(",") { "?" }
+            try {
+                dao.runSessionsRawQuery(
+                    androidx.sqlite.db.SimpleSQLiteQuery(
+                        "SELECT * FROM sessions WHERE id IN ($placeholders)",
+                        hitIds.toTypedArray(),
+                    ),
+                )
+            } catch (e: android.database.SQLException) {
+                ftsAvailable = false
+                return null
+            }
+        }
+        val byId = (hitSessions + titleSessions).associateBy { it.id }
+        val out = ArrayList<SessionSearchResult>(byId.size)
+        for ((id, session) in byId) {
+            val titleMatched = session.title?.let { SessionSearch.firstHit(it, terms) != null } == true
+            val snippet = snippetBySession[id]
+            if (!titleMatched && snippet == null) continue
+            out.add(SessionSearchResult(session, snippet, titleMatched))
+        }
+        out.sortByDescending { it.session.updatedAt }
+        return out
     }
 
     companion object {

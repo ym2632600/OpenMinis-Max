@@ -50,7 +50,7 @@ object DatabaseVersionGuard {
      * agree, so they cannot drift apart silently — a stale copy here would
      * either disable the guard or trip it on every launch.
      */
-    const val CODE_DB_VERSION = 14
+    const val CODE_DB_VERSION = 15
 
     /** Filename must match the one passed to `Room.databaseBuilder`. */
     private const val DB_NAME = "minis.db"
@@ -111,7 +111,10 @@ object DatabaseVersionGuard {
     fun isHandledDowngrade(onDiskVersion: Int): Boolean =
         (onDiskVersion == 12 && CODE_DB_VERSION == 11) ||
             // [T-p1-delegate-task] 13 → 12: MIGRATION_13_12 is a verified no-op.
-            (onDiskVersion == 13 && CODE_DB_VERSION == 12)
+            (onDiskVersion == 13 && CODE_DB_VERSION == 12) ||
+            // [A10] 15 → 14: MIGRATION_15_14 is a verified no-op (FTS tables
+            // are not Room entities; the older build ignores them).
+            (onDiskVersion == 15 && CODE_DB_VERSION == 14)
 
     /** Result of the launch-time check. */
     enum class Decision {

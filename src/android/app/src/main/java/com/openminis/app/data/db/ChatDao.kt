@@ -204,6 +204,18 @@ interface ChatDao {
     @RawQuery
     suspend fun runPartsJsonQuery(query: SupportSQLiteQuery): List<PartsJsonRow>
 
+    /** [A10] FTS search over the visible-text index (SQL in [MessageFts.SEARCH_SQL]). */
+    @RawQuery
+    suspend fun runFtsSearchQuery(query: SupportSQLiteQuery): List<FtsHitRow>
+
+    /** [A10] Arbitrary session projection (title-hit merge, id-IN fetch). */
+    @RawQuery
+    suspend fun runSessionsRawQuery(query: SupportSQLiteQuery): List<ChatSessionEntity>
+
+    /** [A10] Messages after [afterRowid], oldest first, for the FTS backfill. */
+    @Query("SELECT rowid, session_id, parts_json, created_at FROM messages WHERE rowid > :afterRowid ORDER BY rowid LIMIT :limit")
+    suspend fun ftsBackfillBatch(afterRowid: Long, limit: Int): List<FtsBackfillRow>
+
     // ─── Folders (session groups) ──────────────────────────────────────────
     // [T-android-session-grouping] "Folder" in code, "Group" in the UI.
 
@@ -305,7 +317,7 @@ interface ChatDao {
     suspend fun earliestCreatedAt(ids: List<String>): Long?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertMessage(message: MessageEntity)
+    suspend fun insertMessage(message: MessageEntity): Long
 
     /**
      * [T-android-voice-correction] User messages newer than [since] (epoch ms),
@@ -622,6 +634,25 @@ interface ChatDao {
 }
 
 /** [T-android-search-visible-only] A search hit: the session, and its newest matching message. */
+/**
+ * [A10] One FTS hit: the message whose visible text matched, projected for
+ * the snippet extractor. Column names match the aliases in
+ * [MessageFts.SEARCH_SQL] — Room binds by name.
+ */
+data class FtsHitRow(
+    @ColumnInfo(name = "session_id") val sessionId: String,
+    @ColumnInfo(name = "parts_json") val partsJson: String,
+    @ColumnInfo(name = "created_at") val createdAt: Long,
+)
+
+/** [A10] One backfill batch row: raw message plus its rowid (= FTS docid). */
+data class FtsBackfillRow(
+    val rowid: Long,
+    @ColumnInfo(name = "session_id") val sessionId: String,
+    @ColumnInfo(name = "parts_json") val partsJson: String,
+    @ColumnInfo(name = "created_at") val createdAt: Long,
+)
+
 data class SessionSearchRow(
     @androidx.room.Embedded val session: ChatSessionEntity,
     @ColumnInfo(name = "hit_parts_json") val hitPartsJson: String?,

@@ -529,7 +529,7 @@ class MinisApp : Application(), ImageLoaderFactory {
             )
         }
         database = AppDatabase.getInstance(this)
-        chatRepository = ChatRepository(database.chatDao())
+        chatRepository = ChatRepository(database)
         // [T-p2-agent-series] How a background agent's completion reaches its
         // parent: submit the <agent_callback> as a PROGRAMMATIC prompt on the
         // parent's ViewModel (queued behind a running loop, never interrupting).

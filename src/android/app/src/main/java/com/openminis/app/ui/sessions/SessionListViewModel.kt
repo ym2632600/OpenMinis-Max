@@ -265,6 +265,12 @@ class SessionListViewModel(
         // Drop the keys the persisted model wrote; nothing reads them now.
         context.getSharedPreferences("session_list_ui", Context.MODE_PRIVATE)
             .edit().remove("collapsedFolderIds").remove("lastExpandedFolderId").apply()
+        // [A10] Build the FTS message index in the background; until it
+        // completes the search transparently uses the LIKE scan, so nothing
+        // about the results changes — they just get faster once this is done.
+        viewModelScope.launch(Dispatchers.IO) {
+            runCatching { chatRepository.warmSearchIndex() }
+        }
     }
 
     /**
