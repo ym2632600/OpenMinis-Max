@@ -15,6 +15,11 @@ on:
       - '.github/workflows/android-debug-apk.yml'
   workflow_dispatch:
 
+# Only the newest push builds: older queued APK runs cancel automatically.
+concurrency:
+  group: apk-build
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
