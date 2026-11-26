@@ -2751,4 +2751,9 @@
     <string name="data_flow_note_2">With a local provider (e.g. Ollama) no chat content leaves the device at all.</string>
     <string name="settings_data_flow">Privacy &amp; data flow</string>
     <string name="settings_data_flow_subtitle">What is sent to your provider and what stays on-device</string>
+    <!-- A9: test provider key before saving -->
+    <string name="add_provider_test_key">Test key</string>
+    <string name="add_provider_testing_key">Testing…</string>
+    <string name="add_provider_test_success">Key works — %1$d models available</string>
+    <string name="add_provider_test_failed">Test failed: %1$s</string>
 </resources>
