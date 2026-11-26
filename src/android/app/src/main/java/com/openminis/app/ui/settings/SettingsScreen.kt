@@ -24,6 +24,7 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.Lan
 import androidx.compose.material.icons.outlined.Dns
+import androidx.compose.material.icons.outlined.VerifiedUser
 import androidx.compose.material.icons.outlined.Router
 import androidx.compose.material.icons.outlined.VpnLock
 import androidx.compose.material.icons.outlined.BarChart
@@ -106,6 +107,7 @@ fun SettingsScreen(
     // the route yet.
     onSoulClick: () -> Unit = {},
     onPermissionsClick: () -> Unit = {},
+    onConsentClick: () -> Unit = {},
     onUsageClick: () -> Unit = {},
     onAppearanceClick: () -> Unit = {},
     onLogsClick: () -> Unit = {},
@@ -335,6 +337,14 @@ fun SettingsScreen(
                     title = stringResource(R.string.settings_section_permissions),
                     subtitle = stringResource(R.string.settings_permissions_subtitle),
                     onClick = onPermissionsClick,
+                )
+                // B13: central consent layer
+                SettingsItem(
+                    icon = Icons.Outlined.VerifiedUser,
+                    iconColor = Color(0xFFFF9500),
+                    title = stringResource(R.string.consent_settings_title),
+                    subtitle = stringResource(R.string.settings_consent_subtitle),
+                    onClick = onConsentClick,
                 )
                 // A5: data-flow transparency
                 SettingsItem(

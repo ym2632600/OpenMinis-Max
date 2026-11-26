@@ -2795,4 +2795,27 @@
     <string name="err_advice_generic">Try again. If it keeps happening, open Details and share the technical message.</string>
     <string name="err_details">Details</string>
     <string name="err_hide_details">Hide details</string>
+    <!-- B13: consent layer -->
+    <string name="consent_dialog_title">Approval needed</string>
+    <string name="consent_allow_once">Allow once</string>
+    <string name="consent_allow_always">Always allow</string>
+    <string name="consent_deny">Deny</string>
+    <string name="consent_sms_title">Send an SMS to %1$s</string>
+    <string name="consent_settings_title">Consent &amp; approvals</string>
+    <string name="settings_consent_subtitle">What the agent may do without asking each time</string>
+    <string name="consent_settings_note">Before a sensitive action, the agent shows exactly what it will do and waits for your approval. Anything set to \"Always allow\" can be revoked here at any time.</string>
+    <string name="consent_state_always">Always allowed</string>
+    <string name="consent_state_ask">Asks every time</string>
+    <string name="consent_scope_send_sms">Send SMS</string>
+    <string name="consent_scope_send_sms_desc">Text messages sent from your number</string>
+    <string name="consent_scope_send_message">Send messages</string>
+    <string name="consent_scope_send_message_desc">Messages sent in other apps on your behalf</string>
+    <string name="consent_scope_make_purchase">Purchases &amp; payments</string>
+    <string name="consent_scope_make_purchase_desc">Anything that spends money or credits</string>
+    <string name="consent_scope_post_public">Post publicly</string>
+    <string name="consent_scope_post_public_desc">Posts or comments other people can see</string>
+    <string name="consent_scope_delete_data">Delete data</string>
+    <string name="consent_scope_delete_data_desc">Deleting files, messages or other data</string>
+    <string name="consent_scope_accessibility_action">Act in other apps</string>
+    <string name="consent_scope_accessibility_action_desc">Taps, typing and scrolling via accessibility</string>
 </resources>

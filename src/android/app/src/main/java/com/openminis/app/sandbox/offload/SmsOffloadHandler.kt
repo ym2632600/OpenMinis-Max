@@ -7,6 +7,9 @@ import android.net.Uri
 import android.provider.Telephony
 import android.telephony.SmsManager
 import androidx.core.content.ContextCompat
+import com.openminis.app.R
+import com.openminis.app.consent.ConsentManager
+import com.openminis.app.consent.SensitiveScope
 import com.openminis.app.logging.AppLogger
 import com.openminis.app.offload.OffloadPermissionManager
 import com.openminis.app.sandbox.NativeOffloadHandler
@@ -91,6 +94,36 @@ class SmsOffloadHandler(private val context: Context) : NativeOffloadHandler {
         val message = positional.drop(1).joinToString(" ")
         if (message.isBlank()) {
             return NativeOffloadResult(2, "android-sms send: message must not be empty\n")
+        }
+
+        // B13: sending SMS is a sensitive action - route it through the central
+        // consent layer. An always-allow grant auto-approves; otherwise the
+        // user sees exactly what will be sent and must approve (or deny /
+        // let it time out).
+        val consent = runBlocking {
+            ConsentManager.requireConsent(
+                SensitiveScope.SEND_SMS,
+                context.getString(R.string.consent_sms_title, number),
+                listOf(message),
+            )
+        }
+        when (consent) {
+            ConsentManager.ConsentOutcome.Approved,
+            ConsentManager.ConsentOutcome.ApprovedAlways -> Unit
+            ConsentManager.ConsentOutcome.Denied -> {
+                val body = JSONObject()
+                    .put("error", "consent_denied")
+                    .put("message", "The user denied sending this SMS.")
+                    .toString()
+                return NativeOffloadResult(1, OffloadOutput.formatBody(body, parsedArgs) + "\n")
+            }
+            ConsentManager.ConsentOutcome.TimedOut -> {
+                val body = JSONObject()
+                    .put("error", "consent_timeout")
+                    .put("message", "No approval within the time limit; SMS not sent.")
+                    .toString()
+                return NativeOffloadResult(1, OffloadOutput.formatBody(body, parsedArgs) + "\n")
+            }
         }
 
         val smsManager: SmsManager = try {

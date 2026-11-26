@@ -262,6 +262,8 @@ class MinisApp : Application(), ImageLoaderFactory {
         // [T-oauth-wait-fgs] Before anything can start an OAuth callback server:
         // gives it a context to keep the process out of the freezer with.
         com.openminis.app.service.OAuthWaitKeepAlive.install(this)
+        // B13: central consent layer - loads persisted always-allow scopes.
+        com.openminis.app.consent.ConsentManager.init(this)
         // [T-android-tls-trust-error] Localized text for a rejected certificate;
         // LLMError has no Context of its own.
         com.openminis.app.data.model.CertificateErrorText.resolver = { kind, host ->

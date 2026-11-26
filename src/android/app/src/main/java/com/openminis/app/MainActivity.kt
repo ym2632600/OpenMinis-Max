@@ -618,6 +618,10 @@ class MainActivity : ComponentActivity() {
                 // root-level `.sheet(item: gate.pending)`.
                 com.openminis.app.ui.settings.ConfigConfirmDialogHost()
 
+                // B13: root-level consent dialog for sensitive agent actions,
+                // bound to ConsentManager.pending.
+                com.openminis.app.ui.settings.ConsentDialogHost()
+
                 // [FEAT-261021-05] A proxy or Tailscale that keeps failing:
                 // a floating banner over every screen (iOS ContentView).
                 com.openminis.app.ui.settings.NetworkAlertBannerHost(navController)
