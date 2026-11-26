@@ -1087,4 +1087,9 @@
     <string name="data_flow_note_2">مع مزود محلي (مثل Ollama) لا يغادر أي محتوى محادثة الجهاز إطلاقاً.</string>
     <string name="settings_data_flow">الخصوصية وتدفق البيانات</string>
     <string name="settings_data_flow_subtitle">ما الذي يُرسل إلى المزود وما الذي يبقى على الجهاز</string>
+    <!-- A9: test provider key before saving -->
+    <string name="add_provider_test_key">اختبار المفتاح</string>
+    <string name="add_provider_testing_key">جارٍ الاختبار…</string>
+    <string name="add_provider_test_success">المفتاح يعمل — %1$d نموذج متاح</string>
+    <string name="add_provider_test_failed">فشل الاختبار: %1$s</string>
 </resources>
