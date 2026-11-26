@@ -7,6 +7,8 @@ Legend: DONE = implemented in this fork, EXISTS = already in the app (verify, po
 
 Backlog for the coding agent, from the 45-point plan (Groups A, B, C). Full implementation spec with acceptance hints: see BACKLOG.md in this repo. Work in order A1→A15, B1→B15, C1→C15; one commit/branch per item; mirror progress in `ROADMAP.md`.
 
+Multi-agent note: two coding agents (Instinct + Muse) work this backlog. Ownership, lanes and editing rules live in `COORDINATION.md` — read it before committing.
+
 
 ### Group A — Changes to existing behavior
 
