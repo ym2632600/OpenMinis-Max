@@ -201,6 +201,7 @@ object Routes {
     const val APPEARANCE = "appearance"
     const val BACKGROUND = "background"
     const val ABOUT = "about"
+    const val DATA_FLOW = "data_flow"
     const val ONBOARDING_MODELS = "onboarding_models"
     /** T219-2: Mount external folders settings + detail. */
     const val MOUNTED_FOLDERS = "mounted_folders"
@@ -668,6 +669,7 @@ fun AppNavigation(
                 onBackgroundClick = { navController.safeNavigate(Routes.BACKGROUND) },
                 onLogsClick = { navController.safeNavigate(Routes.LOGS) },
                 onAboutClick = { navController.safeNavigate(Routes.ABOUT) },
+                onDataFlowClick = { navController.safeNavigate(Routes.DATA_FLOW) },
                 onMountedFoldersClick = { navController.safeNavigate(Routes.MOUNTED_FOLDERS) },
                 onSharedFoldersClick = { navController.safeNavigate(Routes.SHARED_FOLDERS) },
             )
@@ -1552,6 +1554,12 @@ fun AppNavigation(
 
         composable(Routes.ABOUT) {
             AboutScreen(onBack = { navController.safePopBackStack() })
+        }
+
+        composable(Routes.DATA_FLOW) {
+            com.openminis.app.ui.settings.DataFlowScreen(
+                onBack = { navController.safePopBackStack() },
+            )
         }
 
         composable(Routes.LOGS) {
