@@ -112,6 +112,7 @@ import com.openminis.app.ui.components.SectionDesign
 import com.openminis.app.ui.components.SectionTextField
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.Badge
@@ -676,6 +677,7 @@ fun SessionListScreen(
     val isInitialLoadComplete by viewModel.isInitialLoadComplete.collectAsState()
     val isSearchActive by viewModel.isSearchActive.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
+    val searchDateFilter by viewModel.searchDateFilter.collectAsState()
     val isSearching by viewModel.isSearching.collectAsState()
     val searchSnippets by viewModel.searchSnippets.collectAsState()
     val isSelecting by viewModel.isSelecting.collectAsState()
@@ -1133,6 +1135,13 @@ fun SessionListScreen(
             // iOS `didInitialLoad` on ContentView. The transition is usually
             // sub-200ms, so no spinner.
             if (isInitialLoadComplete) Column(modifier = Modifier.fillMaxSize()) {
+                // [A10] Activity-date filter chips, visible while searching.
+                if (isSearchActive) {
+                    SearchDateFilterRow(
+                        selected = searchDateFilter,
+                        onSelect = { viewModel.searchDateFilter.value = it },
+                    )
+                }
                 // [T-search-folder-expand] A folder whose name matched is a result
                 // even with no member: the list shows it rather than "no results".
                 if (sessions.isEmpty() && !(searchResultsActive && folderBlocks.isNotEmpty())) {
@@ -2047,6 +2056,42 @@ private fun DualFabRow(
         }
 
         if (isSwapped) { chatFab() } else { searchFab() }
+    }
+}
+
+// ─── [A10] Search date filter chips ─────────────────────────────────────────
+
+@Composable
+private fun SearchDateFilterRow(
+    selected: SearchDateFilter,
+    onSelect: (SearchDateFilter) -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        FilterChip(
+            selected = selected == SearchDateFilter.ALL,
+            onClick = { onSelect(SearchDateFilter.ALL) },
+            label = { Text(stringResource(R.string.search_filter_all)) },
+        )
+        FilterChip(
+            selected = selected == SearchDateFilter.TODAY,
+            onClick = { onSelect(SearchDateFilter.TODAY) },
+            label = { Text(stringResource(R.string.search_filter_today)) },
+        )
+        FilterChip(
+            selected = selected == SearchDateFilter.WEEK,
+            onClick = { onSelect(SearchDateFilter.WEEK) },
+            label = { Text(stringResource(R.string.search_filter_week)) },
+        )
+        FilterChip(
+            selected = selected == SearchDateFilter.MONTH,
+            onClick = { onSelect(SearchDateFilter.MONTH) },
+            label = { Text(stringResource(R.string.search_filter_month)) },
+        )
     }
 }
 

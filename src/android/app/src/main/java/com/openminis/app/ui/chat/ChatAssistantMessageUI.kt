@@ -611,8 +611,12 @@ internal fun BoundsTrackedBlock(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun InlineErrorBanner(error: String, onRetry: (() -> Unit)? = null) {
+    // [A7] Human-readable error: plain-language title + what-to-do up front,
+    // the raw technical message behind an expandable Details section.
+    val facing = com.openminis.app.ui.errors.UserFacingErrors.classify(error)
+    var detailsExpanded by remember { mutableStateOf(false) }
     val clipboard = LocalClipboardManager.current
-    Row(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(top = 4.dp)
@@ -625,44 +629,72 @@ internal fun InlineErrorBanner(error: String, onRetry: (() -> Unit)? = null) {
                 },
             )
             .padding(horizontal = 10.dp, vertical = 6.dp),
-        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(
-            imageVector = Icons.Default.Error,
-            contentDescription = null,
-            tint = Color(0xFFFF3B30),
-            modifier = Modifier.size(14.dp),
-        )
-        Spacer(modifier = Modifier.width(8.dp))
-        Text(
-            // [T-in-chat-search] matches painted in place
-            text = com.openminis.app.ui.chat.search.rememberChatSearchHighlighted(error, com.openminis.app.ui.chat.search.ChatSearchUnits.ERROR),
-            color = Color(0xFFFF3B30),
-            fontSize = 12.sp,
-            lineHeight = 16.sp,
-            maxLines = 3,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f),
-        )
-        if (onRetry != null) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                imageVector = Icons.Default.Error,
+                contentDescription = null,
+                tint = Color(0xFFFF3B30),
+                modifier = Modifier.size(14.dp),
+            )
             Spacer(modifier = Modifier.width(8.dp))
-            Row(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(50))
-                    .background(Color(0xFFFF3B30).copy(alpha = 0.15f))
-                    .clickable(onClick = onRetry)
-                    .padding(horizontal = 10.dp, vertical = 3.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Refresh,
-                    contentDescription = null,
-                    tint = Color(0xFFFF3B30),
-                    modifier = Modifier.size(10.dp),
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(stringResource(R.string.chat_longpress_retry), color = Color(0xFFFF3B30), fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+            Text(
+                text = stringResource(facing.titleRes),
+                color = Color(0xFFFF3B30),
+                fontSize = 12.sp,
+                lineHeight = 16.sp,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.weight(1f),
+            )
+            if (onRetry != null) {
+                Spacer(modifier = Modifier.width(8.dp))
+                Row(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(50))
+                        .background(Color(0xFFFF3B30).copy(alpha = 0.15f))
+                        .clickable(onClick = onRetry)
+                        .padding(horizontal = 10.dp, vertical = 3.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Refresh,
+                        contentDescription = null,
+                        tint = Color(0xFFFF3B30),
+                        modifier = Modifier.size(10.dp),
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(stringResource(R.string.chat_longpress_retry), color = Color(0xFFFF3B30), fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                }
             }
+        }
+        Text(
+            text = stringResource(facing.adviceRes),
+            color = Color(0xFFFF3B30).copy(alpha = 0.85f),
+            fontSize = 11.sp,
+            lineHeight = 15.sp,
+            modifier = Modifier.padding(start = 22.dp, top = 2.dp),
+        )
+        Text(
+            text = stringResource(if (detailsExpanded) R.string.err_hide_details else R.string.err_details),
+            color = Color(0xFFFF3B30).copy(alpha = 0.7f),
+            fontSize = 11.sp,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier
+                .padding(start = 22.dp, top = 2.dp)
+                .clickable { detailsExpanded = !detailsExpanded },
+        )
+        if (detailsExpanded) {
+            Text(
+                // [T-in-chat-search] matches painted in place
+                text = com.openminis.app.ui.chat.search.rememberChatSearchHighlighted(error, com.openminis.app.ui.chat.search.ChatSearchUnits.ERROR),
+                color = Color(0xFFFF3B30).copy(alpha = 0.75f),
+                fontSize = 11.sp,
+                lineHeight = 15.sp,
+                fontFamily = FontFamily.Monospace,
+                maxLines = 8,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(start = 22.dp, top = 2.dp),
+            )
         }
     }
 }

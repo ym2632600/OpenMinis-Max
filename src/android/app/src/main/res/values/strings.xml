@@ -1779,7 +1779,7 @@
     <string name="mount_folders_title">Mounted Folders</string>
     <string name="mount_folders_info_banner">Picked folders are bind-mounted at /var/minis/mounts/&lt;name&gt;. Up to 10 folders can be mounted at a time.</string>
     <string name="mount_picker_intro_title">Choose a folder</string>
-    <string name="mount_picker_intro_message">Android doesn\'t allow mounting the whole internal storage — pick a specific folder inside it, such as Documents or Download.\n\nThe file picker that opens next belongs to the system. If a folder shows \u201ccan\u2019t use this folder\u201d, go into one of its subfolders, or use the system Back gesture to return here.</string>
+    <string name="mount_picker_intro_message">Android doesn\'t allow mounting the whole internal storage — pick a specific folder inside it, such as Documents or Download.\n\nThe file picker that opens next belongs to the system. If a folder shows \u201ccan’t use this folder\u201d, go into one of its subfolders, or use the system Back gesture to return here.</string>
     <string name="mount_picker_intro_continue">Choose folder</string>
     <string name="mount_folders_empty_title">No mounted folders</string>
     <string name="mount_folders_empty_subtitle">Tap + to pick a folder</string>
@@ -2756,6 +2756,7 @@
     <string name="add_provider_testing_key">Testing…</string>
     <string name="add_provider_test_success">Key works — %1$d models available</string>
     <string name="add_provider_test_failed">Test failed: %1$s</string>
+<<<<<<< Updated upstream
     <!-- B15: Ollama one-field setup + connection test -->
     <string name="ollama_title">Ollama</string>
     <string name="ollama_subtitle">Local models on your device or home network — no API key needed</string>
@@ -2772,4 +2773,29 @@
     <string name="ollama_save">Save Ollama provider</string>
     <string name="ollama_test_first">Test the connection first, then save.</string>
     <string name="ollama_invalid_address">Enter a valid server address, e.g. http://192.168.1.20:11434.</string>
+=======
+    <string name="search_filter_all">All</string>
+    <string name="search_filter_today">Today</string>
+    <string name="search_filter_week">This week</string>
+    <string name="search_filter_month">This month</string>
+    <!-- A7: human-readable errors -->
+    <string name="err_title_api_key">API key problem</string>
+    <string name="err_advice_api_key">Check the key under Settings → Providers, or test it with the Test key button.</string>
+    <string name="err_title_network">No connection</string>
+    <string name="err_advice_network">Check your internet connection, then try again.</string>
+    <string name="err_title_ratelimit">Too many requests</string>
+    <string name="err_advice_ratelimit">The provider is limiting requests right now. Wait a minute, or switch to another model.</string>
+    <string name="err_title_provider_down">The provider is having trouble</string>
+    <string name="err_advice_provider_down">This is on the provider’s side (a server error). Try again shortly, or switch models.</string>
+    <string name="err_title_provider_rejected">The provider rejected the request</string>
+    <string name="err_advice_provider_rejected">Open Details for the exact reason — it may be the model, the request size, or your plan.</string>
+    <string name="err_title_tls">Secure connection failed</string>
+    <string name="err_advice_tls">The certificate could not be verified — often a proxy, VPN, or a sign-in Wi-Fi. Details has the exact cause.</string>
+    <string name="err_title_decoding">Unreadable reply</string>
+    <string name="err_advice_decoding">The provider’s reply could not be read. Try again; if it repeats, switch models.</string>
+    <string name="err_title_generic">Something went wrong</string>
+    <string name="err_advice_generic">Try again. If it keeps happening, open Details and share the technical message.</string>
+    <string name="err_details">Details</string>
+    <string name="err_hide_details">Hide details</string>
+>>>>>>> Stashed changes
 </resources>

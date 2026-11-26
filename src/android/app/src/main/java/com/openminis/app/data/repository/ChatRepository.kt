@@ -316,13 +316,13 @@ class ChatRepository(private val database: AppDatabase) {
      *    holding ANY of them is a result; `%` and `_` match literally. One
      *    keyword gives the sessions the whole-string search always gave.
      */
-    suspend fun searchSessionsWithHits(query: String): List<SessionSearchResult> {
+    suspend fun searchSessionsWithHits(query: String, minSessionActivity: Long? = null): List<SessionSearchResult> {
         val terms = SessionSearch.searchTerms(query)
         if (terms.isEmpty()) return emptyList()
         // [A10] Indexed fast path once the FTS backfill has completed; the
         // LIKE scan below stays as the fallback for the first searches after
         // an upgrade and for any device where FTS misbehaves.
-        searchSessionsViaFts(terms)?.let { return it }
+        searchSessionsViaFts(terms)?.let { return it.filterByActivity(minSessionActivity) }
         val args = SessionSearch.searchArgs(terms)
         var visibleOnly = true
         val rows = try {
@@ -355,8 +355,12 @@ class ChatRepository(private val database: AppDatabase) {
                 "[Search] dropped $dropped session(s) with no visible hit (visibleOnly=$visibleOnly, budgetLeft=$lookbackBudget)",
             )
         }
-        return out
+        return out.filterByActivity(minSessionActivity)
     }
+
+    /** [A10] Date-window filter: sessions idle since before [min] drop out. */
+    private fun List<SessionSearchResult>.filterByActivity(min: Long?): List<SessionSearchResult> =
+        if (min == null) this else filter { it.session.updatedAt >= min }
 
     /** The newest match was already tried; look through the next few. */
     private suspend fun olderSearchSnippet(sessionId: String, terms: List<String>, visibleOnly: Boolean): String? {

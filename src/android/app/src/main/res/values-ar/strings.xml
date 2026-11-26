@@ -1092,6 +1092,7 @@
     <string name="add_provider_testing_key">جارٍ الاختبار…</string>
     <string name="add_provider_test_success">المفتاح يعمل — %1$d نموذج متاح</string>
     <string name="add_provider_test_failed">فشل الاختبار: %1$s</string>
+<<<<<<< Updated upstream
     <!-- B15: Ollama one-field setup + connection test -->
     <string name="ollama_title">Ollama</string>
     <string name="ollama_subtitle">نماذج محلية على جهازك أو شبكتك المنزلية — بدون مفتاح API</string>
@@ -1108,4 +1109,29 @@
     <string name="ollama_save">حفظ مزود Ollama</string>
     <string name="ollama_test_first">اختبر الاتصال أولاً، ثم احفظ.</string>
     <string name="ollama_invalid_address">أدخل عنوان خادم صحيح، مثل http://192.168.1.20:11434.</string>
+=======
+    <string name="search_filter_all">الكل</string>
+    <string name="search_filter_today">اليوم</string>
+    <string name="search_filter_week">هذا الأسبوع</string>
+    <string name="search_filter_month">هذا الشهر</string>
+    <!-- A7: human-readable errors -->
+    <string name="err_title_api_key">مشكلة في مفتاح API</string>
+    <string name="err_advice_api_key">راجع المفتاح في الإعدادات ← المزودون، أو جرّبه بزر اختبار المفتاح.</string>
+    <string name="err_title_network">مفيش اتصال</string>
+    <string name="err_advice_network">اتأكد من الإنترنت وبعدين حاول تاني.</string>
+    <string name="err_title_ratelimit">طلبات كتير</string>
+    <string name="err_advice_ratelimit">المزود بيحدّد عدد الطلبات دلوقتي. استنى دقيقة أو بدّل لموديل تاني.</string>
+    <string name="err_title_provider_down">المزود عنده مشكلة دلوقتي</string>
+    <string name="err_advice_provider_down">المشكلة من ناحية المزود (خطأ في السيرفر). حاول تاني بعد شوية أو بدّل الموديل.</string>
+    <string name="err_title_provider_rejected">المزود رفض الطلب</string>
+    <string name="err_advice_provider_rejected">افتح التفاصيل عشان تعرف السبب بالظبط — ممكن يكون الموديل أو حجم الطلب أو باقتك.</string>
+    <string name="err_title_tls">فشل الاتصال الآمن</string>
+    <string name="err_advice_tls">مش قادر يتحقق من الشهادة — غالبًا بروكسي أو VPN أو شبكة Wi-Fi بتاعترض الاتصال. التفاصيل فيها السبب بالظبط.</string>
+    <string name="err_title_decoding">رد غير مقروء</string>
+    <string name="err_advice_decoding">رد المزود مش قابل للقراءة. حاول تاني؛ لو تكرر بدّل الموديل.</string>
+    <string name="err_title_generic">حصل خطأ</string>
+    <string name="err_advice_generic">حاول تاني. لو استمر، افتح التفاصيل وشارك الرسالة الفنية.</string>
+    <string name="err_details">التفاصيل</string>
+    <string name="err_hide_details">إخفاء التفاصيل</string>
+>>>>>>> Stashed changes
 </resources>

@@ -136,6 +136,9 @@ class SessionListViewModel(
 
     // Search
     val searchQuery = MutableStateFlow("")
+
+    /** [A10] Activity-date filter applied to search results. */
+    val searchDateFilter = MutableStateFlow(SearchDateFilter.ALL)
     val isSearchActive = MutableStateFlow(false)
     val searchResults = MutableStateFlow<List<ChatSessionEntity>>(emptyList())
 
@@ -399,7 +402,7 @@ class SessionListViewModel(
             chatRepository.observeFolders().collect { folders.value = it }
         }
         viewModelScope.launch {
-            combine(searchQuery, isSearchActive) { q, active -> q to active }
+            combine(searchQuery, isSearchActive, searchDateFilter) { q, active, filter -> Triple(q, active, filter) }
                 .distinctUntilChanged()
                 .onEach { (q, active) ->
                     // Flip [isSearching] true the moment a meaningful query
@@ -416,7 +419,7 @@ class SessionListViewModel(
                 // message, so one query can take seconds; collected one after
                 // another, every intermediate query typed on the way ran to the
                 // end before the one the user meant.
-                .collectLatest { (q, active) ->
+                .collectLatest { (q, active, filter) ->
                     if (active && q.isNotBlank()) {
                         // [T-android-search-visible-only] One query returns each
                         // result with the line that shows why it matched (iOS
@@ -431,7 +434,7 @@ class SessionListViewModel(
                         val started = System.nanoTime()
                         val hits = withContext(Dispatchers.IO) {
                             try {
-                                chatRepository.searchSessionsWithHits(q)
+                                chatRepository.searchSessionsWithHits(q, filter.minUpdatedAt())
                             } catch (e: android.database.sqlite.SQLiteException) {
                                 com.openminis.app.logging.AppLogger.error(
                                     "SessionList", "[Search] query failed: ${e.javaClass.simpleName}: ${e.message}",
@@ -1016,3 +1019,20 @@ class SessionListViewModel(
 /** [FIX-261025-07] Whether "Select All" should read "Deselect All". */
 internal fun allShownSelected(selected: Set<String>, shown: Set<String>): Boolean =
     shown.isNotEmpty() && selected.containsAll(shown)
+
+/** [A10] Date windows for the session-search filter chips. */
+enum class SearchDateFilter {
+    ALL, TODAY, WEEK, MONTH;
+
+    /** Sessions updated at/after this timestamp pass; null = no filtering. */
+    fun minUpdatedAt(): Long? {
+        val now = System.currentTimeMillis()
+        val day = 24L * 3600 * 1000
+        return when (this) {
+            ALL -> null
+            TODAY -> now - day
+            WEEK -> now - 7 * day
+            MONTH -> now - 30 * day
+        }
+    }
+}

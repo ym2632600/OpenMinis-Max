@@ -103,6 +103,9 @@ jobs:
     needs: build
     timeout-minutes: 30
     steps:
+      - name: Checkout (for the ui-smoke script)
+        uses: actions/checkout@v4
+
       - name: Download APK
         uses: actions/download-artifact@v4
         with:
