@@ -96,6 +96,7 @@ fun AddProviderScreen(
     providerRepository: ProviderRepository,
     onBack: () -> Unit,
     onSaved: () -> Unit,
+    onAddOllama: () -> Unit = {},
 ) {
     var step by remember { mutableStateOf(AddProviderStep.CHOOSE_TYPE) }
     var selectedType by remember { mutableStateOf<ProviderType?>(null) }
@@ -154,6 +155,7 @@ fun AddProviderScreen(
                     step = AddProviderStep.CHOOSE_CREDENTIAL
                 }
             },
+            onSelectOllama = onAddOllama,
             onSelectVoiceTemplate = { template ->
                 // Mirror iOS applyVoiceTemplate: pick the underlying protocol,
                 // force API-key credential, jump straight to configure.
@@ -255,6 +257,7 @@ private fun ChooseProviderScreen(
     onBack: () -> Unit,
     onSelect: (ProviderType) -> Unit,
     onSelectVoiceTemplate: (com.openminis.app.data.model.VoiceProviderTemplate) -> Unit = {},
+    onSelectOllama: () -> Unit = {},
 ) {
     SettingsScaffold(
         title = stringResource(R.string.provider_list_add_provider),
@@ -323,6 +326,23 @@ private fun ChooseProviderScreen(
                     showDivider = index < offeredTypes.size - 1,
                 )
             }
+        }
+
+        // B15: one-field Ollama setup. Ollama needs no provider type of its
+        // own: it is an OpenAI-compatible instance whose base URL points at
+        // the Ollama host, so it gets its own row (not a ProviderType case).
+        SettingsSection(
+            header = stringResource(R.string.ollama_local_servers),
+            footer = stringResource(R.string.ollama_local_servers_footer),
+        ) {
+            SettingsRow(
+                title = stringResource(R.string.ollama_title),
+                subtitle = stringResource(R.string.ollama_subtitle),
+                icon = Icons.Default.Terminal,
+                iconColor = Color(0xFF78909C),
+                onClick = onSelectOllama,
+                showDivider = false,
+            )
         }
 
         // [T-android-provider-voice] Voice Chat Providers — one row per voice
