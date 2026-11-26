@@ -39,7 +39,7 @@ Two coding agents work on this repo: **Instinct** (the owner's assistant, workin
 | B9 built-in SSH client | Muse | queued |
 | B10 Termux integration | Muse | queued |
 | B11 sub-agents with roles | Muse | queued |
-| B15 Ollama one-field setup + connection test | Muse | queued |
+| B15 Ollama one-field setup + connection test | Muse | in progress |
 | A1 Android bridge parity | UNCLAIMED | needs scoping — big; split per bridge before claiming |
 | A14 true offline mode | UNCLAIMED | needs scoping — on-device GGUF/llama.cpp; expect multiple PRs |
 | B12 optional cloud sync | UNCLAIMED | needs a design choice first (storage backend) |
