@@ -2728,4 +2728,27 @@
     <string name="widget_minis_voice">New voice chat</string>
     <string name="widget_minis_camera">New camera chat</string>
     <string name="widget_minis_desc">Open Minis or start a new chat, voice chat or camera chat from your home screen.</string>
+    <!-- A5: data-flow transparency screen -->
+    <string name="data_flow_title">Privacy &amp; data flow</string>
+    <string name="data_flow_intro">Minis runs on your device. This page shows exactly what leaves it, where it goes, and what never does.</string>
+    <string name="data_flow_sent_title">Sent to your model provider</string>
+    <string name="data_flow_sent_1">Your chat messages and the agent\'s replies, sent over HTTPS to the provider you configured (Anthropic, OpenAI, Google, or your own endpoint).</string>
+    <string name="data_flow_sent_2">Attachments and images you explicitly add to a chat.</string>
+    <string name="data_flow_sent_3">Results of tools the agent runs (shell commands, browser, contacts, SMS, location) — only the specific result that enters the conversation, never raw access.</string>
+    <string name="data_flow_sent_4">Memory snippets, only when Memory is enabled and relevant to the chat.</string>
+    <string name="data_flow_device_title">Stays on this device</string>
+    <string name="data_flow_device_1">Your full chat history and session database.</string>
+    <string name="data_flow_device_2">Provider API keys, stored in Android Keystore-backed encrypted storage.</string>
+    <string name="data_flow_device_3">Memory files, skills, and settings.</string>
+    <string name="data_flow_device_4">Files in the Linux sandbox (workspace, downloads, attachments).</string>
+    <string name="data_flow_device_5">Your contacts, SMS inbox, location, calendar and photos: tools read them on-device; only the answer to your specific request enters the chat.</string>
+    <string name="data_flow_network_title">Other network calls</string>
+    <string name="data_flow_network_1">Weather: Open-Meteo (no API key, no account), only when the agent checks weather.</string>
+    <string name="data_flow_network_2">Update checks: GitHub, only to see whether a newer build exists.</string>
+    <string name="data_flow_network_3">MCP servers and custom providers you add yourself connect to the endpoints you configure.</string>
+    <string name="data_flow_note_title">Good to know</string>
+    <string name="data_flow_note_1">Each model provider has its own privacy policy for the data it receives; check your provider\'s terms.</string>
+    <string name="data_flow_note_2">With a local provider (e.g. Ollama) no chat content leaves the device at all.</string>
+    <string name="settings_data_flow">Privacy &amp; data flow</string>
+    <string name="settings_data_flow_subtitle">What is sent to your provider and what stays on-device</string>
 </resources>
