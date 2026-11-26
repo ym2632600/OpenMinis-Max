@@ -39,6 +39,7 @@ import com.openminis.app.ui.settings.BackgroundSettingsScreen
 import com.openminis.app.ui.settings.AddModelsToGroupScreen
 import com.openminis.app.ui.settings.ShadowVoiceDetailScreen
 import com.openminis.app.ui.settings.AddProviderScreen
+import com.openminis.app.ui.settings.OllamaSetupScreen
 import com.openminis.app.ui.settings.ModelEntryDetailScreen
 import com.openminis.app.ui.settings.ModelGroupDetailScreen
 import com.openminis.app.ui.settings.ModelGroupsScreen
@@ -92,6 +93,8 @@ object Routes {
     const val SETTINGS = "settings"
     const val PROVIDER_LIST = "providers"
     const val ADD_PROVIDER = "add_provider"
+    /** B15: one-field Ollama setup (server address + connection test). */
+    const val ADD_OLLAMA = "add_ollama"
     const val PROVIDER_DETAIL = "provider/{instanceId}"
     /** [T-android-provider-voice] Read-only shadow Voice Service detail. */
     const val SHADOW_VOICE_DETAIL = "voice_service/{instanceId}"
@@ -948,6 +951,15 @@ fun AppNavigation(
 
         composable(Routes.ADD_PROVIDER) {
             AddProviderScreen(
+                providerRepository = providerRepository,
+                onBack = { navController.safePopBackStack() },
+                onSaved = { navController.safePopBackStack() },
+                onAddOllama = { navController.safeNavigate(Routes.ADD_OLLAMA) },
+            )
+        }
+
+        composable(Routes.ADD_OLLAMA) {
+            OllamaSetupScreen(
                 providerRepository = providerRepository,
                 onBack = { navController.safePopBackStack() },
                 onSaved = { navController.safePopBackStack() },
