@@ -123,6 +123,7 @@ fun SettingsScreen(
     // About row below still has a TODO onClick in HEAD; future settings-bucket
     // work will wire this through.
     onAboutClick: () -> Unit = {},
+    onDataFlowClick: () -> Unit = {},
 ) {
     val context = LocalContext.current
     var showFeedbackSheet by remember { mutableStateOf(false) }
@@ -334,6 +335,14 @@ fun SettingsScreen(
                     title = stringResource(R.string.settings_section_permissions),
                     subtitle = stringResource(R.string.settings_permissions_subtitle),
                     onClick = onPermissionsClick,
+                )
+                // A5: data-flow transparency
+                SettingsItem(
+                    icon = Icons.Outlined.Lock,
+                    iconColor = Color(0xFF34C759),
+                    title = stringResource(R.string.settings_data_flow),
+                    subtitle = stringResource(R.string.settings_data_flow_subtitle),
+                    onClick = onDataFlowClick,
                     showDivider = false,
                 )
             }
@@ -693,4 +702,3 @@ private fun SettingsItem(
         }
     }
 }
-
