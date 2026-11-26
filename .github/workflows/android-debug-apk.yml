@@ -33,8 +33,10 @@ jobs:
 
       - name: Install NDK r28c, CMake, platform 36
         run: |
-          yes | sdkmanager --licenses > /dev/null
-          sdkmanager --install \
+          # ubuntu-latest ships the Android SDK but sdkmanager is not on PATH.
+          SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          yes | "$SDKMANAGER" --licenses > /dev/null
+          "$SDKMANAGER" --install \
             "ndk;28.2.13676358" \
             "cmake;3.22.1" \
             "platforms;android-36" \
