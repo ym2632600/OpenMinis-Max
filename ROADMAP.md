@@ -28,7 +28,7 @@ Backlog for the coding agent, from the 45-point plan (Groups A, B, C). Full impl
 
 ### Group B — Capabilities to add
 
-- [ ] **B1. SMS send/receive from the user's number.** Agent tools to send and read SMS on the device (default-SMS-app role or a companion gateway), with per-message user approval before anything is sent.  **[MISSING]**
+- [x] **B1. SMS send/receive from the user's number.** Agent tools to send and read SMS on the device (default-SMS-app role or a companion gateway), with per-message user approval before anything is sent.  **[DONE]** — android-sms offload CLI (send/list/search/thread) + SmsOffloadHandler, READ_SMS/SEND_SMS, sms_send defaults to per-send approval
 - [ ] **B2. Notification access: read, summarize, reply.** A notification listener service that lets the agent read incoming notifications, summarize them on demand or on a schedule, and offer inline replies where the app supports it.  **[PARTIAL]** — MinisNotificationListenerService (offload) reads notifications; no summarize/reply UX
 - [ ] **B3. Accessibility control.** An accessibility service that lets the agent tap, type, scroll and read screens in other apps, strictly scoped by the consent system (B13) and logged in the activity log (B14).  **[EXISTS]** — accessibility/ service + android-a11y-cli
 - [ ] **B4. Scheduled and recurring tasks.** A reliable scheduler (cron-like plus natural language: "every morning at 8") that runs tasks even when the app UI is closed, built on the A8 foreground-service work.  **[EXISTS]** — scheduled/ package (alarm receiver, runner, store)
