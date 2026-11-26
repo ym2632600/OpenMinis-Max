@@ -1092,4 +1092,20 @@
     <string name="add_provider_testing_key">جارٍ الاختبار…</string>
     <string name="add_provider_test_success">المفتاح يعمل — %1$d نموذج متاح</string>
     <string name="add_provider_test_failed">فشل الاختبار: %1$s</string>
+    <!-- B15: Ollama one-field setup + connection test -->
+    <string name="ollama_title">Ollama</string>
+    <string name="ollama_subtitle">نماذج محلية على جهازك أو شبكتك المنزلية — بدون مفتاح API</string>
+    <string name="ollama_local_servers">خوادم محلية</string>
+    <string name="ollama_local_servers_footer">يعمل Ollama على جهاز الكمبيوتر الخاص بك أو على هذا الجهاز (Termux). لا يُرسل أي شيء إلى مزود سحابي.</string>
+    <string name="ollama_setup_title">الاتصال بـ Ollama</string>
+    <string name="ollama_server_address">عنوان الخادم</string>
+    <string name="ollama_server_address_hint">عنوان خادم Ollama. الافتراضي هو هذا الجهاز (localhost). لجهاز كمبيوتر على شبكة Wi-Fi، استخدم عنوانه المحلي، مثل http://192.168.1.20:11434.</string>
+    <string name="ollama_test_connection">اختبار الاتصال</string>
+    <string name="ollama_testing_connection">جارٍ اختبار الاتصال…</string>
+    <string name="ollama_test_success">تم الاتصال — %1$d نموذج متاح</string>
+    <string name="ollama_test_success_version">تم الاتصال — %1$d نموذج متاح · ‏Ollama %2$s</string>
+    <string name="ollama_test_failed">فشل الاتصال: %1$s</string>
+    <string name="ollama_save">حفظ مزود Ollama</string>
+    <string name="ollama_test_first">اختبر الاتصال أولاً، ثم احفظ.</string>
+    <string name="ollama_invalid_address">أدخل عنوان خادم صحيح، مثل http://192.168.1.20:11434.</string>
 </resources>

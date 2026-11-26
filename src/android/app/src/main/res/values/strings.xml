@@ -2756,4 +2756,20 @@
     <string name="add_provider_testing_key">Testing…</string>
     <string name="add_provider_test_success">Key works — %1$d models available</string>
     <string name="add_provider_test_failed">Test failed: %1$s</string>
+    <!-- B15: Ollama one-field setup + connection test -->
+    <string name="ollama_title">Ollama</string>
+    <string name="ollama_subtitle">Local models on your device or home network — no API key needed</string>
+    <string name="ollama_local_servers">Local servers</string>
+    <string name="ollama_local_servers_footer">Ollama runs on your own computer or on this device (Termux). Nothing is sent to a cloud provider.</string>
+    <string name="ollama_setup_title">Connect Ollama</string>
+    <string name="ollama_server_address">Server address</string>
+    <string name="ollama_server_address_hint">Your Ollama server address. The default is this device (localhost). For a computer on your Wi-Fi, use its LAN address, e.g. http://192.168.1.20:11434.</string>
+    <string name="ollama_test_connection">Test connection</string>
+    <string name="ollama_testing_connection">Testing…</string>
+    <string name="ollama_test_success">Connected — %1$d models available</string>
+    <string name="ollama_test_success_version">Connected — %1$d models available · Ollama %2$s</string>
+    <string name="ollama_test_failed">Connection failed: %1$s</string>
+    <string name="ollama_save">Save Ollama provider</string>
+    <string name="ollama_test_first">Test the connection first, then save.</string>
+    <string name="ollama_invalid_address">Enter a valid server address, e.g. http://192.168.1.20:11434.</string>
 </resources>
