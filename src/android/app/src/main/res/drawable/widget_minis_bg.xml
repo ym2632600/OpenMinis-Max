@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- B5: widget background — rounded, semi-opaque dark card that stays
+     readable on light and dark wallpapers. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <corners android:radius="20dp" />
+    <solid android:color="#E6202023" />
+</shape>
