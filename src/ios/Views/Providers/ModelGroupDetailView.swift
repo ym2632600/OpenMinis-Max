@@ -8,6 +8,9 @@ struct ModelGroupDetailView: View {
 
     @State private var editingName = ""
     @State private var showAddModels = false
+    /// [T-quota-group-member-pill] Provider whose quota sheet a member's pill
+    /// opened; hosted at page level, not on the row.
+    @State private var quotaDetailProviderId: QuotaSheetTarget?
     @State private var showDeleteConfirm = false
     /// Holding `EditMode` directly (rather than a `Bool` + a derived
     /// `editMode` binding) lets SwiftUI own the same value the
@@ -85,9 +88,9 @@ struct ModelGroupDetailView: View {
                 if let group {
                     Button {
                         UIPasteboard.general.string = "group:\(group.id)"
-                        MinisToast.show(String(localized: "Copied: \(group.name)"))
+                        MinisToast.show(AppLocalized("Copied: \(group.name)"))
                     } label: {
-                        Label(String(localized: "Copy Shortcut Model ID"), systemImage: "link")
+                        Label(AppLocalized("Copy Shortcut Model ID"), systemImage: "link")
                     }
                 }
             }
@@ -227,7 +230,7 @@ struct ModelGroupDetailView: View {
                 HStack {
                     Text("Models")
                     Spacer()
-                    Button(editMode.isEditing ? String(localized: "Done") : String(localized: "Edit")) {
+                    Button(editMode.isEditing ? AppLocalized("Done") : AppLocalized("Edit")) {
                         withAnimation {
                             editMode = editMode.isEditing ? .inactive : .active
                         }
@@ -349,12 +352,22 @@ struct ModelGroupDetailView: View {
                 }
             }
         }
-        .scrollDismissesKeyboard(.interactively)
+        // [T-ipad-sheet-keyboard-crash] `.immediately`, not `.interactively`:
+        // this page lives inside the Settings sheet, where an interactive
+        // keyboard drag and the sheet's drag-to-dismiss can share one gesture —
+        // the iPadOS 27 abort described at ModelEntryDetailSheet
+        // (ProviderInstanceDetailView.swift).
+        .scrollDismissesKeyboard(.immediately)
         .environment(\.editMode, $editMode)
         .sheet(isPresented: $showAddModels) {
             NavigationStack {
                 UnifiedModelPicker(config: addModelsConfig())
             }
+        }
+        .sheet(item: $quotaDetailProviderId) { target in
+            QuotaDetailSheet(instanceId: target.id)
+                .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.visible)
         }
     }
 
@@ -369,13 +382,13 @@ struct ModelGroupDetailView: View {
         let store = self.store
         let voiceNote: String? = {
             if store.voiceInputGroupId == gid {
-                return String(localized: "This group drives Voice Input — only models that accept audio input are listed.", comment: "Add-models filter note for the bound voice input group")
+                return AppLocalized("This group drives Voice Input — only models that accept audio input are listed.", comment: "Add-models filter note for the bound voice input group")
             }
             if store.voiceOutputGroupId == gid {
-                return String(localized: "This group drives Voice Output — only models that can output audio are listed.", comment: "Add-models filter note for the bound voice output group")
+                return AppLocalized("This group drives Voice Output — only models that can output audio are listed.", comment: "Add-models filter note for the bound voice output group")
             }
             if store.visionGroupId == gid {
-                return String(localized: "This group describes images for models that cannot see them — only models that accept image input are listed.", comment: "Add-models filter note for the bound vision group")
+                return AppLocalized("This group describes images for models that cannot see them — only models that accept image input are listed.", comment: "Add-models filter note for the bound vision group")
             }
             return nil
         }()
@@ -389,7 +402,7 @@ struct ModelGroupDetailView: View {
             onAddMulti: { ids in
                 guard var group = store.group(for: gid) else { return }
                 group.memberEntryIds.append(contentsOf: ids.sorted())
-                store.updateGroup(group)
+                store.updateGroup(group, orderReason: "user-add")
             }
         )
     }
@@ -404,9 +417,20 @@ struct ModelGroupDetailView: View {
                 .opacity(providerDisabled ? 0.35 : 1)
 
             VStack(alignment: .leading, spacing: 1) {
-                Text(entry.model.displayName)
-                    .font(.subheadline)
-                    .foregroundStyle(providerDisabled ? Color.secondary : Color(UIColor.label))
+                HStack(alignment: .quotaCapCenter, spacing: 4) {
+                    Text(entry.model.displayName)
+                        .font(.subheadline)
+                        .foregroundStyle(providerDisabled ? Color.secondary : Color(UIColor.label))
+                        .alignmentGuide(.quotaCapCenter) { $0.quotaCapCenter }
+                    // [T-quota-group-member-pill] The model's (or its account's)
+                    // quota; this page has no other way to the provider's quota.
+                    if !providerDisabled {
+                        ModelQuotaMemberPill(instanceId: entry.providerInstanceId,
+                                             modelId: entry.baseModel.id) {
+                            quotaDetailProviderId = QuotaSheetTarget(id: entry.providerInstanceId)
+                        }
+                    }
+                }
                 if let instance = instance {
                     HStack(spacing: 4) {
                         Text(instance.label)
@@ -535,20 +559,20 @@ struct ModelGroupDetailView: View {
         var updated = group
         updated.memberEntryIds.removeAll { $0 == entryId }
         clampThinkingLevelIfNeeded(&updated)
-        store.updateGroup(updated)
+        store.updateGroup(updated, orderReason: "user-delete")
     }
 
     private func moveMember(from source: IndexSet, to destination: Int, in group: ModelGroup) {
         var updated = group
         updated.memberEntryIds.move(fromOffsets: source, toOffset: destination)
-        store.updateGroup(updated)
+        store.updateGroup(updated, orderReason: "user-drag")
     }
 
     private func deleteMember(at offsets: IndexSet, from group: ModelGroup) {
         var updated = group
         updated.memberEntryIds.remove(atOffsets: offsets)
         clampThinkingLevelIfNeeded(&updated)
-        store.updateGroup(updated)
+        store.updateGroup(updated, orderReason: "user-delete")
     }
 
     private func clampThinkingLevelIfNeeded(_ group: inout ModelGroup) {
@@ -592,7 +616,7 @@ private struct ContextLimitSlider: View {
         ("200K", 200_000),
         ("400K", 400_000),
         ("1M",   1_000_000),
-        (String(localized: "Unlimited"), Int.max),
+        (AppLocalized("Unlimited"), Int.max),
     ]
 
     private var sliderIndex: Double {
@@ -609,8 +633,8 @@ private struct ContextLimitSlider: View {
     }
 
     private var currentLabel: String {
-        guard let v = value else { return steps.last?.label ?? String(localized: "Unlimited") }
-        if v >= Int.max { return String(localized: "Unlimited") }
+        guard let v = value else { return steps.last?.label ?? AppLocalized("Unlimited") }
+        if v >= Int.max { return AppLocalized("Unlimited") }
         if let match = steps.first(where: { $0.tokens == v }) { return match.label }
         return "\(v / 1000)K"
     }

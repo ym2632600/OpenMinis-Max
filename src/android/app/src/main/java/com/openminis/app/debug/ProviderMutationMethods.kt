@@ -207,20 +207,28 @@ internal object ProviderMutationMethods {
         val baseURL = instance.effectiveBaseURL ?: when (instance.providerType) {
             ProviderType.anthropic -> "https://api.anthropic.com"
             ProviderType.gemini -> "https://generativelanguage.googleapis.com"
-            ProviderType.openAI -> "https://api.openai.com/v1"
+            // [T-android-provider-type-parity] Responses API shares the host.
+            ProviderType.openAI, ProviderType.openAIResponses -> "https://api.openai.com/v1"
             ProviderType.openRouter -> "https://openrouter.ai/api/v1"
             ProviderType.xAI -> "https://api.x.ai/v1"
             ProviderType.kimiCode -> "https://api.kimi.com/coding/v1"
+            ProviderType.githubCopilot -> com.openminis.app.auth.CopilotDeviceFlow.API_BASE
+            ProviderType.antigravity, ProviderType.unsupported -> ""
         }
         val probeURL = when (instance.providerType) {
             ProviderType.anthropic -> "$baseURL/v1/models"
             ProviderType.gemini -> "$baseURL/v1beta/models?key=" + (repo.loadApiKey(id) ?: "")
-            ProviderType.openAI -> if (baseURL.endsWith("/v1")) "$baseURL/models" else "$baseURL/v1/models"
+            ProviderType.openAI, ProviderType.openAIResponses ->
+                if (baseURL.endsWith("/v1")) "$baseURL/models" else "$baseURL/v1/models"
             ProviderType.openRouter -> "$baseURL/models"
             // xAI exposes an OpenAI-compatible /models endpoint at the same base.
             ProviderType.xAI -> if (baseURL.endsWith("/v1")) "$baseURL/models" else "$baseURL/v1/models"
             // Kimi Coding: OpenAI-compatible /models under /coding/v1.
             ProviderType.kimiCode -> if (baseURL.endsWith("/v1")) "$baseURL/models" else "$baseURL/v1/models"
+            // [T-copilot-provider] /models sits at the API root, no /v1.
+            ProviderType.githubCopilot -> "$baseURL/models"
+            // No probe endpoint for a type this build cannot drive.
+            ProviderType.antigravity, ProviderType.unsupported -> baseURL
         }
         val client = okhttp3.OkHttpClient.Builder()
             .connectTimeout(timeoutMs.toLong(), java.util.concurrent.TimeUnit.MILLISECONDS)
@@ -231,7 +239,8 @@ internal object ProviderMutationMethods {
         val key = repo.loadApiKey(id)
         when (instance.providerType) {
             ProviderType.anthropic -> if (!key.isNullOrEmpty()) builder.header("x-api-key", key).header("anthropic-version", "2023-06-01")
-            ProviderType.openAI -> if (!key.isNullOrEmpty()) builder.header("Authorization", "Bearer $key")
+            ProviderType.openAI, ProviderType.openAIResponses ->
+                if (!key.isNullOrEmpty()) builder.header("Authorization", "Bearer $key")
             ProviderType.openRouter -> if (!key.isNullOrEmpty()) builder.header("Authorization", "Bearer $key")
             ProviderType.gemini -> { /* key in URL */ }
             // xAI: OpenAI-compat bearer header. Manual API key OR OAuth
@@ -239,6 +248,15 @@ internal object ProviderMutationMethods {
             ProviderType.xAI -> if (!key.isNullOrEmpty()) builder.header("Authorization", "Bearer $key")
             // Kimi Coding: OpenAI-compat bearer (OAuth access token or key).
             ProviderType.kimiCode -> if (!key.isNullOrEmpty()) builder.header("Authorization", "Bearer $key")
+            // [T-copilot-provider] The mirrored `apikey_<id>` slot holds the
+            // GITHUB account token, which /models does not accept — it wants
+            // the short-lived session token. A meaningful probe would have to
+            // run the exchange, so this one is left unauthenticated and is
+            // expected to 401; Quick Test is the real check.
+            ProviderType.githubCopilot -> { /* session token not available here */ }
+            // [T-android-provider-type-parity] No auth scheme known for a type
+            // this build cannot drive; the probe will simply fail.
+            ProviderType.antigravity, ProviderType.unsupported -> { /* no auth */ }
         }
         val start = System.currentTimeMillis()
         try {
@@ -408,8 +426,12 @@ internal object ProviderMutationMethods {
 
         val before = repo.entriesFor(instanceId).map { it.baseModel.id }.toSet()
         val start = System.currentTimeMillis()
+        var outcome: com.openminis.app.data.repository.ProviderRepository.ModelRefreshOutcome? = null
         try {
-            repo.refreshModels(instance)
+            // [T-codex-dynamic-discovery GH#319] Mirror the in-app Refresh
+            // button, which forces. Defaulted false so existing callers of this
+            // RPC keep exercising the cached path.
+            outcome = repo.refreshModels(instance, forceRefresh = params.optBoolean("forceRefresh", false))
         } catch (e: Exception) {
             throw RPCException(-32000, "refreshModels failed: ${e.message}")
         }
@@ -422,6 +444,12 @@ internal object ProviderMutationMethods {
             put("disappeared", disappeared)
             put("total", after.size)
             put("durationMs", System.currentTimeMillis() - start)
+            // [T-android-model-refresh-visible] Where the list came from and,
+            // when it was not the vendor's own, why.
+            outcome?.let {
+                put("source", it.source.name)
+                it.vendorError?.let { e -> put("vendorError", e) }
+            }
         }
     }
 
@@ -480,7 +508,11 @@ internal object ProviderMutationMethods {
             val knownEntryIds = repo.config.value.modelEntries.map { it.id }.toSet()
             for (i in 0 until membersRaw.length()) {
                 val id = membersRaw.optString(i)
-                if (id.isNotEmpty() && id in knownEntryIds) members.add(id)
+                // Built-in System voice members are valid but never stored in
+                // modelEntries (see groupsUpdate).
+                if (id.isNotEmpty() &&
+                    (id in knownEntryIds || com.openminis.app.data.model.SystemVoiceEntries.resolve(id) != null)
+                ) members.add(id)
             }
         }
         val strategy = parseStrategy(params.optString("strategy", "fallback"))
@@ -491,6 +523,7 @@ internal object ProviderMutationMethods {
             memberEntryIds = members,
             strategy = strategy,
             fallbackStrategy = fallback,
+            contextLimitTokens = contextLimitParam(params),
         )
         repo.addGroup(group)
         return JSONObject().put("group", groupToJson(repo, group))
@@ -525,11 +558,18 @@ internal object ProviderMutationMethods {
             current.memberEntryIds.clear()
             for (i in 0 until arr.length()) {
                 val mid = arr.optString(i)
-                if (mid.isNotEmpty() && mid in knownIds) current.memberEntryIds.add(mid)
+                // Built-in System voice members ("__builtin_system_speech__/…")
+                // are synthesized, never stored in modelEntries, yet are valid
+                // members of voice groups; dropping them here silently removed
+                // them from a group on any update that listed them.
+                if (mid.isNotEmpty() &&
+                    (mid in knownIds || com.openminis.app.data.model.SystemVoiceEntries.resolve(mid) != null)
+                ) current.memberEntryIds.add(mid)
             }
         }
         if (params.has("strategy")) current.strategy = parseStrategy(params.optString("strategy"))
         if (params.has("fallbackStrategy")) current.fallbackStrategy = parseFallback(params.optString("fallbackStrategy"))
+        if (params.has("contextLimitTokens")) current.contextLimitTokens = contextLimitParam(params)
         repo.updateGroup(current)
         return JSONObject().put("group", groupToJson(repo, current))
     }
@@ -592,6 +632,17 @@ internal object ProviderMutationMethods {
         else -> FallbackStrategy.default
     }
 
+    /**
+     * The group's context cap (the "Context limit" switch on the group page):
+     * a positive token count, or null / 0 / absent for no cap.
+     */
+    private fun contextLimitParam(params: JSONObject): Int? {
+        if (!params.has("contextLimitTokens") || params.isNull("contextLimitTokens")) return null
+        val value = params.optInt("contextLimitTokens", -1)
+        if (value < 0) throw RPCException(-32602, "contextLimitTokens must be a token count, or null / 0 for no cap")
+        return value.takeIf { it > 0 }
+    }
+
     private fun groupToJson(repo: ProviderRepository, group: ModelGroup): JSONObject {
         val cfg = repo.config.value
         return JSONObject().apply {
@@ -601,6 +652,7 @@ internal object ProviderMutationMethods {
             put("fallbackStrategy", group.fallbackStrategy.name)
             put("isDefault", group.id == cfg.defaultPrimaryGroupId)
             put("inAgentLoop", group.id in cfg.agentLoopGroupIds)
+            put("contextLimitTokens", group.contextLimitTokens ?: JSONObject.NULL)
             val ids = JSONArray()
             for (m in group.memberEntryIds) ids.put(m)
             put("memberEntryIds", ids)

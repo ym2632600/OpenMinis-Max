@@ -1,7 +1,9 @@
 package com.openminis.app.ui.settings
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,6 +25,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -34,6 +37,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,9 +49,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.openminis.app.i18n.uppercaseForDisplay
 
 /**
- * Shared primitives for settings pages. Grouped-card layout (iOS/ChatGPT style).
+ * Shared primitives for settings pages. Grouped-card layout (iOS inset-grouped style).
  *
  * Structure:
  *   SettingsScaffold(title, actions?) {
@@ -80,6 +85,9 @@ fun SettingsScaffold(
     centerTitle: Boolean = false,
     floatingActionButton: @Composable (() -> Unit)? = null,
     scrollable: Boolean = true,
+    // [T-android-storage-usage-cache] Optional bottom action bar (e.g. a
+    // selection mode's actions). Null keeps every existing caller unchanged.
+    bottomBar: @Composable (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Scaffold(
@@ -119,6 +127,7 @@ fun SettingsScaffold(
             }
         },
         floatingActionButton = { floatingActionButton?.invoke() },
+        bottomBar = { bottomBar?.invoke() },
         containerColor = MaterialTheme.colorScheme.background,
     ) { padding ->
         // T183: imePadding() shrinks the scroll container by the IME's
@@ -134,6 +143,61 @@ fun SettingsScaffold(
         Column(
             modifier = if (scrollable) baseMod.verticalScroll(rememberScrollState()) else baseMod,
             content = content,
+        )
+    }
+}
+
+// ─── Switch ────────────────────────────────────────────────────────────────────
+
+/**
+ * [T-android-switch-row-height] A [Switch] that does not inflate the row it
+ * sits in. Use this instead of Material's `Switch` inside any settings row.
+ *
+ * ## The problem it solves
+ *
+ * Compose applies `LocalMinimumInteractiveComponentSize` (48dp) to Switch, so
+ * although the control DRAWS at 32dp it MEASURES at 48. Inside a row whose
+ * height is `heightIn(min = 56.dp)` + 12dp vertical padding, that produced:
+ *
+ *     with a switch:  48 + 12 + 12  = 72dp   (heightIn never applies)
+ *     without one:    30 + 12 + 12  = 54dp   -> clamped to 56dp
+ *
+ * Measured on a Pixel 6: switch rows rendered 190px and plain rows 147px, a
+ * visible 16dp step between neighbouring rows of the same card. It read as
+ * "the Encryption section has odd spacing" when in fact every switch row in
+ * the app was taller than every non-switch row.
+ *
+ * iOS has no equivalent problem — SwiftUI's List sizes all its rows alike and
+ * a Toggle does not stretch one — so this was an Android-only artefact rather
+ * than an intentional difference.
+ *
+ * ## Why waiving the minimum is safe here
+ *
+ * The 48dp floor exists so a small control is still easy to hit. In these rows
+ * the WHOLE ROW is clickable and at least 56dp tall, and tapping anywhere on it
+ * toggles the same state, so the effective touch target grows rather than
+ * shrinks. Material's own guidance allows waiving the minimum exactly when a
+ * control is embedded in a larger interactive surface.
+ *
+ * Do NOT use this for a standalone switch that is the only touch target.
+ */
+@Composable
+fun SettingsSwitch(
+    checked: Boolean,
+    onCheckedChange: ((Boolean) -> Unit)?,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    colors: androidx.compose.material3.SwitchColors = SwitchDefaults.colors(),
+) {
+    CompositionLocalProvider(
+        LocalMinimumInteractiveComponentSize provides Dp.Unspecified,
+    ) {
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            modifier = modifier,
+            enabled = enabled,
+            colors = colors,
         )
     }
 }
@@ -162,7 +226,7 @@ fun SettingsSection(
     ) {
         if (header != null) {
             Text(
-                text = header.uppercase(),
+                text = header.uppercaseForDisplay(),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontWeight = FontWeight.Medium,
@@ -214,6 +278,7 @@ fun SettingsSection(
  * Generic row: left icon (optional colored circle) + title/subtitle + trailing slot + optional chevron.
  * Pass `showDivider = false` on the last row of a section.
  */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun SettingsRow(
     title: String,
@@ -229,6 +294,9 @@ fun SettingsRow(
     // two-line content (e.g. the model list: name + id) passes 72dp for the MD3
     // double-line height. Default keeps every other row at the single-line 56dp.
     minHeight: Dp = 56.dp,
+    // Long-press on a row that is also tappable (e.g. a skill's context menu).
+    // Null keeps the plain clickable, so no other row changes.
+    onLongClick: (() -> Unit)? = null,
 ) {
     Column {
         Row(
@@ -241,7 +309,14 @@ fun SettingsRow(
                 // effectively asymmetric once the 0.5dp divider was added/removed)
                 // is what made a no-subtitle last row read ~50px shorter.
                 .heightIn(min = minHeight)
-                .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+                .then(
+                    when {
+                        onClick != null && onLongClick != null ->
+                            Modifier.combinedClickable(onClick = onClick, onLongClick = onLongClick)
+                        onClick != null -> Modifier.clickable(onClick = onClick)
+                        else -> Modifier
+                    },
+                )
                 .padding(horizontal = 14.dp, vertical = 12.dp),
             // #10 keep the trailing control (Switch/value) vertically centered
             // against the title — already centered, kept explicit.
@@ -336,7 +411,7 @@ fun SettingsSwitchRow(
         showChevron = false,
         showDivider = showDivider,
         trailing = {
-            Switch(
+            SettingsSwitch(
                 checked = checked,
                 onCheckedChange = onCheckedChange,
                 enabled = enabled,
