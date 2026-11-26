@@ -2721,4 +2721,11 @@
     <string name="mcp_dcr_registration_unreadable">The registration response could not be read.</string>
     <string name="mcp_dcr_http_status">%1$s returned HTTP %2$d.</string>
     <string name="mcp_dcr_unreadable">%1$s returned data that could not be read.</string>
+    <!-- B5: home-screen widget -->
+    <string name="widget_minis_label">Minis quick actions</string>
+    <string name="widget_minis_open">Open Minis</string>
+    <string name="widget_minis_new_chat">New chat</string>
+    <string name="widget_minis_voice">New voice chat</string>
+    <string name="widget_minis_camera">New camera chat</string>
+    <string name="widget_minis_desc">Open Minis or start a new chat, voice chat or camera chat from your home screen.</string>
 </resources>
