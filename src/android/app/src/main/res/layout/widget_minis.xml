@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- B5: single-row quick-action widget. ImageButtons reuse the existing
+     shortcut icon set so the widget matches the app-icon long-press menu. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    android:gravity="center"
+    android:padding="6dp"
+    android:background="@drawable/widget_minis_bg">
+
+    <ImageButton
+        android:id="@+id/widget_open"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_margin="4dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/widget_minis_open"
+        android:src="@mipmap/ic_launcher" />
+
+    <ImageButton
+        android:id="@+id/widget_new_chat"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_margin="4dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/widget_minis_new_chat"
+        android:src="@drawable/ic_shortcut_new_chat" />
+
+    <ImageButton
+        android:id="@+id/widget_voice"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_margin="4dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/widget_minis_voice"
+        android:src="@drawable/ic_shortcut_voice_chat" />
+
+    <ImageButton
+        android:id="@+id/widget_camera"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_margin="4dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/widget_minis_camera"
+        android:src="@drawable/ic_shortcut_camera_chat" />
+</LinearLayout>
