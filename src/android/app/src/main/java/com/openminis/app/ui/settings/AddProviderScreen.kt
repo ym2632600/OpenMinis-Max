@@ -71,6 +71,10 @@ import androidx.compose.ui.res.stringResource
 import com.openminis.app.auth.OpenAIOAuthManager
 import com.openminis.app.auth.OpenRouterOAuthManager
 import com.openminis.app.data.model.ProviderCredential
+import com.openminis.app.provider.anthropic.AnthropicModelsApi
+import com.openminis.app.provider.gemini.GeminiModelsApi
+import com.openminis.app.provider.openai.OpenAIModelsApi
+import com.openminis.app.provider.openrouter.OpenRouterModelsApi
 import com.openminis.app.data.model.ProviderInstance
 import com.openminis.app.data.model.ProviderType
 import com.openminis.app.data.repository.ProviderRepository
@@ -578,6 +582,53 @@ private fun ColumnScope.ApiKeyConfigSection(
                     }
                 },
             )
+        }
+    }
+
+    // ── A9: Test key (validate with the provider before saving) ─────────
+    run {
+        var testState by remember { mutableStateOf<KeyTestState>(KeyTestState.Idle) }
+        SettingsSection {
+            SettingsCardBlock {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    MinisButton(
+                        onClick = {
+                            if (testState != KeyTestState.Testing && apiKey.isNotBlank()) {
+                                testState = KeyTestState.Testing
+                                scope.launch {
+                                    testState = testApiKey(providerType, apiKey.trim(), customBaseURL.trim())
+                                }
+                            }
+                        },
+                        enabled = apiKey.isNotBlank() && testState != KeyTestState.Testing,
+                    ) {
+                        Text(
+                            stringResource(
+                                if (testState == KeyTestState.Testing) {
+                                    R.string.add_provider_testing_key
+                                } else {
+                                    R.string.add_provider_test_key
+                                },
+                            ),
+                        )
+                    }
+                    when (val st = testState) {
+                        is KeyTestState.Success -> Text(
+                            stringResource(R.string.add_provider_test_success, st.modelCount),
+                            color = MaterialTheme.colorScheme.primary,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.padding(start = 12.dp),
+                        )
+                        is KeyTestState.Failure -> Text(
+                            stringResource(R.string.add_provider_test_failed, st.message),
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.padding(start = 12.dp),
+                        )
+                        else -> {}
+                    }
+                }
+            }
         }
     }
 
@@ -1130,3 +1181,51 @@ internal class SaveOnce {
 
 @Composable
 private fun rememberSaveOnce(): SaveOnce = remember { SaveOnce() }
+
+// ── A9: key test plumbing ────────────────────────────────────────────────
+private sealed interface KeyTestState {
+    data object Idle : KeyTestState
+    data object Testing : KeyTestState
+    data class Success(val modelCount: Int) : KeyTestState
+    data class Failure(val message: String) : KeyTestState
+}
+
+/**
+ * Validate an unsaved API key by listing the provider's models — the same
+ * calls the model picker uses, so a passing test means the key will work in
+ * chat. forceRefresh + no context skips the model-list cache. Never throws:
+ * the error string is shown next to the Test button.
+ */
+private suspend fun testApiKey(
+    providerType: ProviderType,
+    apiKey: String,
+    customBaseURL: String,
+): KeyTestState {
+    val base = customBaseURL.ifBlank { null }
+    return try {
+        when (providerType) {
+            ProviderType.anthropic -> {
+                val models = AnthropicModelsApi.fetchModels(apiKey, base, isOAuth = false, forceRefresh = true)
+                if (models.isEmpty()) KeyTestState.Failure("no models returned") else KeyTestState.Success(models.size)
+            }
+            ProviderType.gemini -> {
+                val models = GeminiModelsApi.fetchModels(apiKey, forceRefresh = true)
+                if (models.isEmpty()) KeyTestState.Failure("no models returned") else KeyTestState.Success(models.size)
+            }
+            ProviderType.openRouter -> {
+                val models = OpenRouterModelsApi.fetchModels(apiKey, forceRefresh = true)
+                if (models.isEmpty()) KeyTestState.Failure("no models returned") else KeyTestState.Success(models.size)
+            }
+            else -> {
+                val r = OpenAIModelsApi.fetchModelsDetailed(apiKey, base, forceRefresh = true)
+                when {
+                    r.error != null -> KeyTestState.Failure(r.error)
+                    r.models.isEmpty() -> KeyTestState.Failure("no models returned")
+                    else -> KeyTestState.Success(r.models.size)
+                }
+            }
+        }
+    } catch (t: Throwable) {
+        KeyTestState.Failure(t.message ?: t.javaClass.simpleName)
+    }
+}
