@@ -14,7 +14,6 @@
         android:layout_width="48dp"
         android:layout_height="48dp"
         android:layout_margin="4dp"
-        android:background="?attr/selectableItemBackgroundBorderless"
         android:contentDescription="@string/widget_minis_open"
         android:src="@mipmap/ic_launcher" />
 
@@ -23,7 +22,6 @@
         android:layout_width="48dp"
         android:layout_height="48dp"
         android:layout_margin="4dp"
-        android:background="?attr/selectableItemBackgroundBorderless"
         android:contentDescription="@string/widget_minis_new_chat"
         android:src="@drawable/ic_shortcut_new_chat" />
 
@@ -32,7 +30,6 @@
         android:layout_width="48dp"
         android:layout_height="48dp"
         android:layout_margin="4dp"
-        android:background="?attr/selectableItemBackgroundBorderless"
         android:contentDescription="@string/widget_minis_voice"
         android:src="@drawable/ic_shortcut_voice_chat" />
 
@@ -41,7 +38,6 @@
         android:layout_width="48dp"
         android:layout_height="48dp"
         android:layout_margin="4dp"
-        android:background="?attr/selectableItemBackgroundBorderless"
         android:contentDescription="@string/widget_minis_camera"
         android:src="@drawable/ic_shortcut_camera_chat" />
 </LinearLayout>
