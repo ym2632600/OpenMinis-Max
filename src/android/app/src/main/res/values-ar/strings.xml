@@ -1057,4 +1057,11 @@
     <string name="browser_downloads_cancel">إلغاء التنزيل</string>
     <string name="browser_downloads_failed">فشل</string>
     <string name="browser_downloads_open">فتح</string>
+    <!-- B5: home-screen widget -->
+    <string name="widget_minis_label">إجراءات مينيس السريعة</string>
+    <string name="widget_minis_open">فتح مينيس</string>
+    <string name="widget_minis_new_chat">محادثة جديدة</string>
+    <string name="widget_minis_voice">محادثة صوتية جديدة</string>
+    <string name="widget_minis_camera">محادثة كاميرا جديدة</string>
+    <string name="widget_minis_desc">افتح مينيس أو ابدأ محادثة جديدة أو صوتية أو بالكاميرا من الشاشة الرئيسية.</string>
 </resources>
