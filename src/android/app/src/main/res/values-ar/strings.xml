@@ -1064,4 +1064,27 @@
     <string name="widget_minis_voice">محادثة صوتية جديدة</string>
     <string name="widget_minis_camera">محادثة كاميرا جديدة</string>
     <string name="widget_minis_desc">افتح مينيس أو ابدأ محادثة جديدة أو صوتية أو بالكاميرا من الشاشة الرئيسية.</string>
+    <!-- A5: data-flow transparency screen -->
+    <string name="data_flow_title">الخصوصية وتدفق البيانات</string>
+    <string name="data_flow_intro">مينيس يعمل على جهازك. هذه الصفحة توضح بالضبط ما الذي يغادره، وإلى أين يذهب، وما الذي لا يغادره أبداً.</string>
+    <string name="data_flow_sent_title">يُرسل إلى مزود النموذج</string>
+    <string name="data_flow_sent_1">رسائلك في المحادثة وردود الوكيل، تُرسل عبر HTTPS إلى المزود الذي اخترته (Anthropic أو OpenAI أو Google أو خادمك الخاص).</string>
+    <string name="data_flow_sent_2">المرفقات والصور التي تضيفها بنفسك إلى المحادثة.</string>
+    <string name="data_flow_sent_3">نتائج الأدوات التي يشغلها الوكيل (الطرفية، المتصفح، جهات الاتصال، الرسائل، الموقع) — فقط النتيجة المحددة التي تدخل المحادثة، وليس وصولاً خاماً.</string>
+    <string name="data_flow_sent_4">مقتطفات الذاكرة، فقط عندما تكون الذاكرة مفعلة ومرتبطة بالمحادثة.</string>
+    <string name="data_flow_device_title">يبقى على هذا الجهاز</string>
+    <string name="data_flow_device_1">سجل محادثاتك الكامل وقاعدة بيانات الجلسات.</string>
+    <string name="data_flow_device_2">مفاتيح API للمزودين، مخزنة في تخزين مشفر مدعوم بـ Android Keystore.</string>
+    <string name="data_flow_device_3">ملفات الذاكرة والمهارات والإعدادات.</string>
+    <string name="data_flow_device_4">الملفات داخل بيئة لينكس (مساحة العمل والتنزيلات والمرفقات).</string>
+    <string name="data_flow_device_5">جهات اتصالك ورسائلك وموقعك وتقويمك وصورك: الأدوات تقرأها على الجهاز؛ وفقط إجابة طلبك المحدد تدخل المحادثة.</string>
+    <string name="data_flow_network_title">اتصالات شبكية أخرى</string>
+    <string name="data_flow_network_1">الطقس: Open-Meteo (بدون مفتاح API وبدون حساب)، فقط عندما يتحقق الوكيل من الطقس.</string>
+    <string name="data_flow_network_2">فحص التحديثات: GitHub، فقط لمعرفة ما إذا كان هناك إصدار أحدث.</string>
+    <string name="data_flow_network_3">خوادم MCP والمزودون المخصصون الذين تضيفهم بنفسك يتصلون بالعناوين التي تحددها أنت.</string>
+    <string name="data_flow_note_title">معلومات مفيدة</string>
+    <string name="data_flow_note_1">لكل مزود نموذج سياسة خصوصية خاصة به للبيانات التي يستلمها؛ راجع شروط مزودك.</string>
+    <string name="data_flow_note_2">مع مزود محلي (مثل Ollama) لا يغادر أي محتوى محادثة الجهاز إطلاقاً.</string>
+    <string name="settings_data_flow">الخصوصية وتدفق البيانات</string>
+    <string name="settings_data_flow_subtitle">ما الذي يُرسل إلى المزود وما الذي يبقى على الجهاز</string>
 </resources>
