@@ -1092,7 +1092,6 @@
     <string name="add_provider_testing_key">جارٍ الاختبار…</string>
     <string name="add_provider_test_success">المفتاح يعمل — %1$d نموذج متاح</string>
     <string name="add_provider_test_failed">فشل الاختبار: %1$s</string>
-<<<<<<< Updated upstream
     <!-- B15: Ollama one-field setup + connection test -->
     <string name="ollama_title">Ollama</string>
     <string name="ollama_subtitle">نماذج محلية على جهازك أو شبكتك المنزلية — بدون مفتاح API</string>
@@ -1109,7 +1108,6 @@
     <string name="ollama_save">حفظ مزود Ollama</string>
     <string name="ollama_test_first">اختبر الاتصال أولاً، ثم احفظ.</string>
     <string name="ollama_invalid_address">أدخل عنوان خادم صحيح، مثل http://192.168.1.20:11434.</string>
-=======
     <string name="search_filter_all">الكل</string>
     <string name="search_filter_today">اليوم</string>
     <string name="search_filter_week">هذا الأسبوع</string>
@@ -1133,5 +1131,4 @@
     <string name="err_advice_generic">حاول تاني. لو استمر، افتح التفاصيل وشارك الرسالة الفنية.</string>
     <string name="err_details">التفاصيل</string>
     <string name="err_hide_details">إخفاء التفاصيل</string>
->>>>>>> Stashed changes
 </resources>

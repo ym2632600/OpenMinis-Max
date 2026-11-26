@@ -2756,7 +2756,6 @@
     <string name="add_provider_testing_key">Testing…</string>
     <string name="add_provider_test_success">Key works — %1$d models available</string>
     <string name="add_provider_test_failed">Test failed: %1$s</string>
-<<<<<<< Updated upstream
     <!-- B15: Ollama one-field setup + connection test -->
     <string name="ollama_title">Ollama</string>
     <string name="ollama_subtitle">Local models on your device or home network — no API key needed</string>
@@ -2773,7 +2772,6 @@
     <string name="ollama_save">Save Ollama provider</string>
     <string name="ollama_test_first">Test the connection first, then save.</string>
     <string name="ollama_invalid_address">Enter a valid server address, e.g. http://192.168.1.20:11434.</string>
-=======
     <string name="search_filter_all">All</string>
     <string name="search_filter_today">Today</string>
     <string name="search_filter_week">This week</string>
@@ -2797,5 +2795,4 @@
     <string name="err_advice_generic">Try again. If it keeps happening, open Details and share the technical message.</string>
     <string name="err_details">Details</string>
     <string name="err_hide_details">Hide details</string>
->>>>>>> Stashed changes
 </resources>
