@@ -88,6 +88,11 @@ android {
     buildTypes {
         getByName("debug") {
             buildConfigField("boolean", "DEV_TOOLS", "true")
+            // UI smoke on CI installs the debug APK on an x86_64 emulator;
+            // with arm64-v8a only the install fails NO_MATCHING_ABIS. The
+            // CMake JNI bridges compile per requested ABI, so x86_64 libs
+            // are guaranteed present. Release stays arm64-only.
+            ndk { abiFilters += "x86_64" }
         }
         // `perf`: the debug variant minus android:debuggable. ART refuses to
         // AOT-compile a debuggable app (`cmd package compile -m speed`
