@@ -410,9 +410,10 @@ dependencies {
     implementation("androidx.activity:activity-compose:1.9.3")
 
     // A1: Health Connect bridge (steps / heart rate / sleep reads).
-    // 1.0.0, not 1.1.0: 1.1.0 requires AGP 8.9.1 and this module is pinned
-    // to AGP 8.7.3 (checkGithubDebugAarMetadata fails at configuration time).
-    implementation("androidx.health.connect:connect-client:1.0.0")
+    // 1.0.0-alpha11, not 1.1.0: 1.1.0 requires AGP 8.9.1 and this module is
+    // pinned to AGP 8.7.3 (checkGithubDebugAarMetadata fails at configuration
+    // time). There is no stable 1.0.0 — the line went alphas -> 1.1.0.
+    implementation("androidx.health.connect:connect-client:1.0.0-alpha11")
     implementation("androidx.exifinterface:exifinterface:1.3.7")
 
     // Navigation
