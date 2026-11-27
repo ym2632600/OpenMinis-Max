@@ -683,7 +683,7 @@
     <string name="sync_state_on">On — next run around 3:00 AM</string>
     <string name="sync_state_off">Off</string>
     <string name="sync_passphrase_title">Sync Passphrase</string>
-    <string name="sync_passphrase_body">This passphrase encrypts every nightly sync package end to end. It is stored in this device's Keystore-backed encrypted storage. You need the same passphrase to restore on another device.</string>
+    <string name="sync_passphrase_body">This passphrase encrypts every nightly sync package end to end. It is stored in this device\'s Keystore-backed encrypted storage. You need the same passphrase to restore on another device.</string>
     <string name="common_edit">Edit</string>
     <!-- [T-android-thinking-rules-phase2] Provider-detail Thinking Rules section -->
     <string name="thinking_rules_section">Thinking Rules</string>
