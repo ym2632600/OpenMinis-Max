@@ -1405,6 +1405,9 @@
     <string name="settings_bubble">Floating Chat Bubble</string>
     <string name="settings_bubble_footer">Show a small floating bubble over other apps so you can summon Minis from any screen. Tap it to open the last chat; drag to move it.</string>
     <string name="bubble_hide">Hide bubble</string>
+        <!-- B5: floating bubble notification. -->
+        <string name="bubble_notification_title">Floating bubble active</string>
+        <string name="bubble_notification_body">Tap to open Minis, or hide the bubble until you return to the app.</string>
     <!-- [T-android-dynamic-island] Android 16 Live Updates / dynamic-island toggle. -->
     <string name="settings_dynamic_island">Dynamic Island (Live Updates)</string>
     <string name="settings_dynamic_island_footer">Show live Agent status on the Android 16 status chip. When on, this replaces the floating overlay so you don\'t see two status indicators at once.</string>
