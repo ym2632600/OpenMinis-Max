@@ -1196,4 +1196,6 @@
     <string name="skill_warning_approve">الموافقة والتفعيل</string>
     <string name="skill_warning_import">استيراد</string>
     <string name="skill_warning_deny">إلغاء</string>
+    <string name="consent_reply_title">الرد على %1$s (%2$s)</string>
+    <string name="activity_log_reply_sent">أُرسل رد عبر %1$s</string>
 </resources>

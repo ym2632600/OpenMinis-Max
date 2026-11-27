@@ -14,7 +14,12 @@ import android.service.notification.StatusBarNotification
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
+import android.app.RemoteInput
+import android.os.Bundle
 import com.openminis.app.R
+import com.openminis.app.activitylog.ActivityLog
+import com.openminis.app.consent.ConsentManager
+import com.openminis.app.consent.SensitiveScope
 import com.openminis.app.logging.AppLogger
 import com.openminis.app.offload.MinisNotificationListenerService
 import com.openminis.app.offload.OffloadPermissionManager
@@ -82,6 +87,7 @@ class NotificationOffloadHandler(private val context: Context) : NativeOffloadHa
                     NativeOffloadResult(0, OffloadOutput.formatBody("All notifications cleared.", args) + "\n")
                 }
                 "list" -> handleList(args)
+                "reply" -> handleReply(args)
                 "pending" -> handlePending(args)
                 "cancel" -> handleCancel(args)
                 "settings" -> handleSettings(args)
@@ -443,53 +449,149 @@ class NotificationOffloadHandler(private val context: Context) : NativeOffloadHa
 
     // ── list ────────────────────────────────────────────────────────────────
 
-    private fun handleList(args: OffloadArgs): NativeOffloadResult {
-        if (!MinisNotificationListenerService.isEnabled(context)) {
-            // Notification Access can only be granted from the system settings
-            // page — requestPermissions is not an option. Use the in-app
-            // "settings gate" which shows a dialog, opens the settings page,
-            // and polls for the user to complete the grant.
-            val result = runBlocking {
-                OffloadPermissionManager.requestSettingsGate(
-                    OffloadPermissionManager.SettingsGateRequest(
-                        id = "notification_access",
-                        title = "Notification access needed",
-                        message = "Minis needs Notification access to read the status-bar notifications. Open Settings and enable \"Minis\" under Notification access.",
-                        settingsAction = MinisNotificationListenerService.SETTINGS_ACTION,
-                        requiresPackageUri = false,
-                        positiveLabel = "Open Settings",
-                    ),
-                    check = { MinisNotificationListenerService.isEnabled(context) },
-                )
-            }
-            when (result) {
-                OffloadPermissionManager.AndroidPermissionResult.GRANTED -> {} // continue
-                OffloadPermissionManager.AndroidPermissionResult.DENIED -> {
-                    return NativeOffloadResult(
-                        77,
-                        OffloadOutput.formatBody(
-                            JSONObject()
-                                .put("error", "notification_access_not_granted")
-                                .put("message", "The user declined to grant Notification access.")
-                                .toString(),
-                            args,
-                        ) + "\n",
-                    )
-                }
-                OffloadPermissionManager.AndroidPermissionResult.TIMEOUT -> {
-                    return NativeOffloadResult(
-                        77,
-                        OffloadOutput.formatBody(
-                            JSONObject()
-                                .put("error", "timeout")
-                                .put("message", "Timed out waiting for the user to enable Notification access.")
-                                .toString(),
-                            args,
-                        ) + "\n",
-                    )
-                }
-            }
+    /**
+     * Notification Access can only be granted from the system settings page —
+     * requestPermissions is not an option. Shows the in-app "settings gate"
+     * (dialog + settings page + poll) on first use. Null = access granted;
+     * otherwise the error result the caller should return.
+     */
+    private fun ensureListenerAccess(args: OffloadArgs): NativeOffloadResult? {
+        if (MinisNotificationListenerService.isEnabled(context)) return null
+        val result = runBlocking {
+            OffloadPermissionManager.requestSettingsGate(
+                OffloadPermissionManager.SettingsGateRequest(
+                    id = "notification_access",
+                    title = "Notification access needed",
+                    message = "Minis needs Notification access to read the status-bar notifications. Open Settings and enable \"Minis\" under Notification access.",
+                    settingsAction = MinisNotificationListenerService.SETTINGS_ACTION,
+                    requiresPackageUri = false,
+                    positiveLabel = "Open Settings",
+                ),
+                check = { MinisNotificationListenerService.isEnabled(context) },
+            )
         }
+        return when (result) {
+            OffloadPermissionManager.AndroidPermissionResult.GRANTED -> null
+            OffloadPermissionManager.AndroidPermissionResult.DENIED -> NativeOffloadResult(
+                77,
+                OffloadOutput.formatBody(
+                    JSONObject()
+                        .put("error", "notification_access_not_granted")
+                        .put("message", "The user declined to grant Notification access.")
+                        .toString(),
+                    args,
+                ) + "\n",
+            )
+            OffloadPermissionManager.AndroidPermissionResult.TIMEOUT -> NativeOffloadResult(
+                77,
+                OffloadOutput.formatBody(
+                    JSONObject()
+                        .put("error", "timeout")
+                        .put("message", "Timed out waiting for the user to enable Notification access.")
+                        .toString(),
+                    args,
+                ) + "\n",
+            )
+        }
+    }
+
+    // ── reply (B2) ──────────────────────────────────────────────────────────
+
+    /**
+     * Inline reply to a messaging notification through its RemoteInput action.
+     * Routed through the B13 consent layer (SEND_MESSAGE) and recorded in the
+     * B14 activity log.
+     */
+    private fun handleReply(args: OffloadArgs): NativeOffloadResult {
+        val positional = args.positional.drop(1)
+        if (positional.size < 2) {
+            return NativeOffloadResult(2, "android-notification reply: usage: reply <key> <message...>\n")
+        }
+        val key = positional[0]
+        val message = positional.drop(1).joinToString(" ")
+        if (message.isBlank()) {
+            return NativeOffloadResult(2, "android-notification reply: message must not be empty\n")
+        }
+
+        ensureListenerAccess(args)?.let { return it }
+
+        val active = MinisNotificationListenerService.getActiveNotifications()
+            ?: return errorJson(args, "listener_not_connected",
+                "Notification listener is authorized but not yet connected. Please try again in a moment.")
+        val sbn = active.firstOrNull { it.key == key }
+            ?: return errorJson(args, "notification_not_found",
+                "No active notification with that key. Run `android-notification list` for current keys.")
+        val action = sbn.notification.actions?.firstOrNull { a ->
+            a.remoteInputs?.isNotEmpty() == true
+        } ?: return errorJson(args, "not_replyable",
+            "This notification offers no inline reply action.")
+
+        val pm = context.packageManager
+        val appName = try {
+            pm.getApplicationLabel(pm.getApplicationInfo(sbn.packageName, 0)).toString()
+        } catch (_: Throwable) { sbn.packageName }
+        val title = sbn.notification.extras.getCharSequence("android.title")?.toString() ?: appName
+
+        // B13: replying as the user is a sensitive action.
+        val consent = runBlocking {
+            ConsentManager.requireConsent(
+                SensitiveScope.SEND_MESSAGE,
+                context.getString(R.string.consent_reply_title, appName, title),
+                listOf(message),
+            )
+        }
+        when (consent) {
+            ConsentManager.ConsentOutcome.Approved,
+            ConsentManager.ConsentOutcome.ApprovedAlways -> Unit
+            ConsentManager.ConsentOutcome.Denied ->
+                return errorJson(args, "consent_denied", "The user denied this reply.")
+            ConsentManager.ConsentOutcome.TimedOut ->
+                return errorJson(args, "consent_timeout", "No approval within the time limit; reply not sent.")
+        }
+
+        return try {
+            val fill = Intent()
+            val results = Bundle()
+            val remoteInputs = action.remoteInputs
+            for (ri in remoteInputs) {
+                results.putCharSequence(ri.resultKey, message)
+            }
+            RemoteInput.addResultsToIntent(remoteInputs, fill, results)
+            action.actionIntent.send(context, 0, fill)
+            AppLogger.info(TAG, "inline reply sent via ${sbn.packageName} (${message.length} chars)")
+            // B14: a sent reply is irreversible, so no undo metadata.
+            ActivityLog.record(
+                ActivityLog.CATEGORY_MESSAGE_SENT,
+                context.getString(R.string.activity_log_reply_sent, appName),
+                details = message,
+            )
+            NativeOffloadResult(
+                0,
+                OffloadOutput.formatBody(
+                    JSONObject()
+                        .put("replied", true)
+                        .put("app", appName)
+                        .put("chars", message.length)
+                        .toString(),
+                    args,
+                ) + "\n",
+            )
+        } catch (e: Throwable) {
+            errorJson(args, "reply_failed", e.message ?: "unknown")
+        }
+    }
+
+    private fun errorJson(args: OffloadArgs, code: String, message: String): NativeOffloadResult =
+        NativeOffloadResult(
+            1,
+            OffloadOutput.formatBody(
+                JSONObject().put("error", code).put("message", message).toString(),
+                args,
+            ) + "\n",
+        )
+
+    private fun handleList(args: OffloadArgs): NativeOffloadResult {
+        ensureListenerAccess(args)?.let { return it }
 
         // `NotificationManager.activeNotifications` only exposes this app's
         // own notifications. The cross-app list comes from our bound
@@ -528,11 +630,18 @@ class NotificationOffloadHandler(private val context: Context) : NativeOffloadHa
                 } catch (_: Throwable) { pkg }
             }
             val obj = JSONObject()
+                .put("key", sbn.key)
                 .put("package", pkg)
                 .put("app", appName)
                 .put("title", title)
                 .put("body", text)
                 .put("post_time", sbn.postTime)
+            // B2: replyable = the notification carries a RemoteInput action
+            // (messaging apps). `reply <key>` targets it.
+            val hasReplyAction = sbn.notification.actions?.any { a ->
+                a.remoteInputs?.isNotEmpty() == true
+            } == true
+            if (hasReplyAction) obj.put("replyable", true)
             if (!subText.isNullOrEmpty()) obj.put("subtitle", subText)
             if (sbn.isOngoing) obj.put("ongoing", true)
             arr.put(obj)
@@ -560,7 +669,11 @@ Usage:
   android-notification schedule --title T --body B [--after SECS | --at ISO]
                                        (alias: send — same flags)
   android-notification                  Same as `list` (default subcommand)
-  android-notification list [--max N]   Active (already-delivered)
+  android-notification list [--max N]   Active (already-delivered; includes
+                                        key + replyable flag)
+  android-notification reply <key> <message...>
+                                        Inline reply to a replyable notification
+                                        (B13 consent prompt, B14 activity log)
   android-notification pending          Scheduled but not yet fired
   android-notification cancel --id <id>
   android-notification cancel --all

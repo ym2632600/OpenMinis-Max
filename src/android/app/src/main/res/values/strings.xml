@@ -2859,4 +2859,6 @@
     <string name="skill_warning_approve">Approve &amp; enable</string>
     <string name="skill_warning_import">Import</string>
     <string name="skill_warning_deny">Cancel</string>
+    <string name="consent_reply_title">Reply to %1$s (%2$s)</string>
+    <string name="activity_log_reply_sent">Reply sent via %1$s</string>
 </resources>
