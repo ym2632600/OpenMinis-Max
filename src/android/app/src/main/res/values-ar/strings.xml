@@ -2666,6 +2666,7 @@
     <string name="consent_allow_always">السماح دائمًا</string>
     <string name="consent_deny">رفض</string>
     <string name="consent_sms_title">إرسال رسالة SMS إلى %1$s</string>
+    <string name="consent_call_title">إجراء مكالمة إلى %1$s</string>
     <string name="consent_settings_title">الموافقات على الإجراءات الحساسة</string>
     <string name="settings_consent_subtitle">ما يمكن للوكيل فعله دون سؤال في كل مرة</string>
     <string name="consent_settings_note">قبل أي إجراء حساس، يعرض الوكيل ما سيفعله بالضبط وينتظر موافقتك. يمكنك إلغاء أي نطاق «مسموح دائمًا» من هنا في أي وقت.</string>
@@ -2673,6 +2674,8 @@
     <string name="consent_state_ask">يسأل في كل مرة</string>
     <string name="consent_scope_send_sms">إرسال رسائل SMS</string>
     <string name="consent_scope_send_sms_desc">رسائل نصية تُرسَل من رقمك</string>
+    <string name="consent_scope_place_call">إجراء مكالمات هاتفية</string>
+    <string name="consent_scope_place_call_desc">يمكن لـ Minis إجراء مكالمات هاتفية بالنيابة عنك.</string>
     <string name="consent_scope_send_message">إرسال رسائل</string>
     <string name="consent_scope_send_message_desc">رسائل تُرسَل باسمك في تطبيقات أخرى</string>
     <string name="consent_scope_make_purchase">المشتريات والمدفوعات</string>
