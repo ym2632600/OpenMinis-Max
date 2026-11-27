@@ -285,6 +285,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.openminis.app.offload.OffloadPermissionManager
+import com.openminis.app.sandbox.offload.createCameraOutputUri
 import com.mikepenz.markdown.compose.components.markdownComponents
 import com.mikepenz.markdown.m3.Markdown
 import com.mikepenz.markdown.m3.markdownColor
