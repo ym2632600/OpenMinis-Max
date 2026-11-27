@@ -122,6 +122,7 @@ class CallOffloadHandler internal constructor(
         // Per-call user consent, naming the number.
         when (system.requestConsent(number)) {
             ConsentManager.ConsentOutcome.Approved -> Unit
+            ConsentManager.ConsentOutcome.ApprovedAlways -> Unit
             ConsentManager.ConsentOutcome.Denied -> {
                 AppLogger.warning(TAG, "consent denied for call to $number")
                 return NativeOffloadResult(
@@ -241,12 +242,12 @@ class CallOffloadHandler internal constructor(
     }
 
     private fun hasUnknownOption(args: List<String>): Boolean =
-        args.any { it.startsWith("-") && it !in OffloadOutput.OUTPUT_OPTIONS }
+        args.any { it.startsWith("-") && it.trimStart('-') !in OffloadOutput.OUTPUT_FLAGS }
 
     companion object {
         private const val TAG = "CallOffloadHandler"
 
-        private const val HELP_TEXT = """
+        private val HELP_TEXT = """
             android-call — place a phone call or open the dialer.
 
             Usage:
