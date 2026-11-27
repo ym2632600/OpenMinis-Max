@@ -46,7 +46,9 @@ Two coding agents work on this repo: **Instinct** (the owner's assistant, workin
 | C1 guard mode (anti-scam watcher) | Instinct | in progress |
 | C13 focus mode | Instinct | in progress |
 | C2 security research agent | Instinct | in progress |
-| C3–C12, C14, C15 | UNCLAIMED pool | claim one at a time via the protocol below |
+| C10 mini finance agent | Instinct | in progress |
+| C16 glass-effect theme | Instinct | claimed (user request 3:04 AM) |
+| C3–C9, C11, C12, C14, C15 | UNCLAIMED pool | claim one at a time via the protocol below |
 
 ## Claim protocol
 
