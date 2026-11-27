@@ -121,6 +121,17 @@ fun ScheduledTasksScreen(
                             expanded = showMenu,
                             onDismissRequest = { showMenu = false },
                         ) {
+                            // C9: one-tap daily job-hunt preset.
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.scheduled_tasks_add_job_hunt)) },
+                                onClick = {
+                                    showMenu = false
+                                    vm.addJobHuntPreset(
+                                        label = context.getString(R.string.job_hunt_task_label),
+                                        prompt = JOB_HUNT_TASK_PROMPT,
+                                    )
+                                },
+                            )
                             // C2: one-tap morning security-brief preset.
                             DropdownMenuItem(
                                 text = { Text(stringResource(R.string.scheduled_tasks_add_security_brief)) },
@@ -371,6 +382,17 @@ private fun dowShort(dow: Int): String = when (dow) {
  * C2: prompt for the morning security-brief scheduled task. English on
  * purpose (model instructions); the skill directs the reply language.
  */
+/**
+ * C9: prompt for the daily job-hunt scheduled task. English on purpose
+ * (model instructions); the skill directs the reply language.
+ */
+private const val JOB_HUNT_TASK_PROMPT =
+    "You are the user's job-hunt assistant. Follow the job-hunt skill exactly: " +
+    "pull new remote job postings from the last 7 days (Remotive, Arbeitnow, RemoteOK), " +
+    "match them against the user's profile in memory, and deliver a shortlist of at most 5 " +
+    "postings (title, company, one-line fit reason, URL) in the app's UI language. " +
+    "Never apply or contact anyone; drafting happens only when the user picks a posting."
+
 private const val SECURITY_BRIEF_TASK_PROMPT =
     "You are the user's security research agent. Follow the security-brief skill exactly: " +
     "collect the most relevant new CVEs and security news from the last 24-48 hours for the " +

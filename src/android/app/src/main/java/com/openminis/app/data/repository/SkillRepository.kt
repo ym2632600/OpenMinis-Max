@@ -1241,6 +1241,8 @@ class SkillRepository(private val context: Context) {
         installBundledSkill("security-brief", "1.0.0", SECURITY_BRIEF_CONTENT)
         // C15: "explain this" mode - reads the current screen (with consent) and explains it.
         installBundledSkill("explain-screen", "1.0.0", EXPLAIN_SCREEN_CONTENT)
+        // C9: job-hunt assistant - the weekly job-hunt preset drives it.
+        installBundledSkill("job-hunt", "1.0.0", JOB_HUNT_CONTENT)
     }
 
     private fun installBundledSkill(bundledId: String, bundledVersion: String, content: String) {
@@ -1790,6 +1792,51 @@ Do not create extraneous files: README.md, INSTALLATION_GUIDE.md, CHANGELOG.md, 
  * C2: bundled "security-brief" skill. The scheduled morning-brief preset
  * instructs the agent to follow this playbook.
  */
+private val JOB_HUNT_CONTENT = """
+---
+name: job-hunt
+version: 1.0.0
+description: Track remote job postings from free sources, match them to the user's profile, and draft a tailored CV and cover letter per posting for review. Use when the user asks to look for jobs, check new postings, or prepare an application.
+---
+
+# Job-Hunt Assistant
+
+Find remote job postings, match them to the user, and draft application materials.
+The user reviews everything - never apply, submit, or contact anyone on the user's behalf.
+
+## Sources (all free, no API key)
+
+- Remotive: `curl -s "https://remotive.com/api/remote-jobs?limit=50"` (JSON: jobs[].title,
+  company_name, candidate_required_location, url, tags, publication_date).
+- Arbeitnow: `curl -s "https://www.arbeitnow.com/api/job-board-api"` (JSON: data[].title,
+  company, location, url, tags).
+- RemoteOK: `curl -s -H "User-Agent: Mozilla/5.0" "https://remoteok.com/api"` (JSON array;
+  skip the first metadata element).
+
+If a source fails, note it in one short line and continue with the others. Use each
+posting's own URL; never invent application links.
+
+## Matching
+
+- Read the user's profile from memory (skills, studies, experience, languages, location)
+  before scoring. If the profile is thin, ask the user for a one-paragraph bio once and
+  save it to memory.
+- Score each posting: required skills overlap first, then seniority (prefer junior /
+  entry-level when the profile says student or fresh graduate), then location rules
+  (worldwide > the user's region).
+- Keep only postings published in the last 7 days. Drop duplicates across sources.
+
+## Output
+
+- Language: the app's current UI language (Arabic when the UI is Arabic).
+- A shortlist of at most 5 postings, one block each: title, company, why it fits in one
+  line, and the posting URL.
+- For the postings the user picks, draft a tailored CV summary and a cover letter as
+  Markdown files (job-hunt/ folder), then show the full text in chat for review. State
+  clearly that nothing was sent.
+- Facts only: never invent experience, degrees, or employers in drafts.
+"""
+
 private val EXPLAIN_SCREEN_CONTENT = """
 ---
 name: explain-screen

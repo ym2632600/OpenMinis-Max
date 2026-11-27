@@ -171,6 +171,26 @@ class ScheduledTasksViewModel(private val appContext: Context) : ViewModel() {
         }
     }
 
+    /**
+     * C9: one-tap "weekly job hunt" preset. Creates a daily 09:00 task that
+     * runs the bundled job-hunt skill. No-op when a task with the same
+     * label already exists.
+     */
+    fun addJobHuntPreset(label: String, prompt: String) {
+        if (tasks.value.any { it.label == label }) return
+        viewModelScope.launch(Dispatchers.IO) {
+            manager.create(
+                ScheduledTask(
+                    label = label,
+                    timeOfDayHour = 9,
+                    timeOfDayMinute = 0,
+                    repeatMode = ScheduledRepeatMode.DAILY,
+                    prompt = prompt,
+                ),
+            )
+        }
+    }
+
     fun delete(taskId: String) {
         viewModelScope.launch(Dispatchers.IO) { manager.delete(taskId) }
     }

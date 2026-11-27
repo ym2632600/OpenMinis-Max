@@ -1239,6 +1239,8 @@
     <!-- C2: security research agent -->
     <string name="scheduled_tasks_add_security_brief">إضافة الموجز الأمني الصباحي</string>
     <string name="security_brief_task_label">الموجز الأمني الصباحي</string>
+    <string name="scheduled_tasks_add_job_hunt">إضافة البحث اليومي عن وظائف</string>
+    <string name="job_hunt_task_label">البحث اليومي عن وظائف</string>
     <!-- C10: mini finance agent -->
     <string name="finance_title">متتبع المصاريف</string>
     <string name="settings_finance_subtitle">مصاريفك ودخلك من إشعارات البنك والمحافظ</string>

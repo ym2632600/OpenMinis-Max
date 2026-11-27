@@ -2902,6 +2902,8 @@
     <!-- C2: security research agent -->
     <string name="scheduled_tasks_add_security_brief">Add morning security brief</string>
     <string name="security_brief_task_label">Morning security brief</string>
+    <string name="scheduled_tasks_add_job_hunt">Add daily job hunt</string>
+    <string name="job_hunt_task_label">Daily job hunt</string>
     <!-- C10: mini finance agent -->
     <string name="finance_title">Expense tracker</string>
     <string name="settings_finance_subtitle">Expenses and income parsed from bank and wallet notifications</string>
