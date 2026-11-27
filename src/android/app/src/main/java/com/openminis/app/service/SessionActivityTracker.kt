@@ -447,7 +447,7 @@ object SessionActivityTracker {
 
     private fun shouldRunService(): Boolean =
         _activeSessions.value.isNotEmpty() || _presentSessions.value.isNotEmpty() ||
-            _overlayCompletionPending.value ||
+            _overlayCompletionPending.value || _bubbleKeepAlive.value ||
             // [T-scheduled-active-session-android] A chat waiting on its own
             // scheduled task is not finished: keep the process alive between
             // fires. See setScheduledSessions for why it never STARTS it.
@@ -486,6 +486,29 @@ object SessionActivityTracker {
         // will re-evaluate this for us.
         if (!pending && !shouldRunService()) stopService()
     }
+    
+    /**
+     * B5: true while the floating chat bubble is owed to the user.
+      *
+       * The bubble lives in a WindowManager view owned by
+        * [AgentForegroundService], so the service must outlive the session
+         * that produced it - the same reason [setOverlayCompletionPending]
+          * exists for the completion capsule. Set by [AgentForegroundService]
+           * when the bubble is shown, and cleared when it is hidden (toggle
+            * off, no permission, app foregrounded, or the user hides it). It is
+             * deliberately NOT set from the toggle alone: a bubble the user never
+              * sees must not keep the service alive.
+               */
+               private val _bubbleKeepAlive = MutableStateFlow(false)
+               fun setBubbleKeepAlive(keepAlive: Boolean) {
+                       if (_bubbleKeepAlive.value == keepAlive) return
+                       _bubbleKeepAlive.value = keepAlive
+                       Log.d(TAG, "bubbleKeepAlive=$keepAlive")
+                           // Releasing the last reason to live must actually stop the service -
+                               // the flag is set while no session is running, so nothing else
+                                   // will re-evaluate this for us.
+                                       if (!keepAlive && !shouldRunService()) stopService()
+               }
 
     /**
      * T50: per-session stream-cancel callbacks. Each ChatViewModel
