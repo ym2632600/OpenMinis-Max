@@ -1239,6 +1239,8 @@ class SkillRepository(private val context: Context) {
         installBundledSkill("skill-creator", "2.0.0", SKILL_CREATOR_CONTENT)
         // C2: security research agent - the morning-brief preset drives it.
         installBundledSkill("security-brief", "1.0.0", SECURITY_BRIEF_CONTENT)
+        // C15: "explain this" mode - reads the current screen (with consent) and explains it.
+        installBundledSkill("explain-screen", "1.0.0", EXPLAIN_SCREEN_CONTENT)
     }
 
     private fun installBundledSkill(bundledId: String, bundledVersion: String, content: String) {
@@ -1788,6 +1790,46 @@ Do not create extraneous files: README.md, INSTALLATION_GUIDE.md, CHANGELOG.md, 
  * C2: bundled "security-brief" skill. The scheduled morning-brief preset
  * instructs the agent to follow this playbook.
  */
+private val EXPLAIN_SCREEN_CONTENT = """
+---
+name: explain-screen
+version: 1.0.0
+description: Explain what is on the user's screen right now - an error, a dialog, a confusing page - and what to do next. Use when the user asks "what is this", "explain this screen/error", or shares a screenshot for explanation.
+---
+
+# Explain This Screen
+
+Read the current screen and explain it in plain language, then say what to do next.
+
+## Consent first
+
+- Only read the screen when the user just asked for it in this conversation. Never capture
+  on a schedule or in the background.
+- If the accessibility service is off, tell the user in one line how to enable it
+  (Settings > Accessibility) and stop. Do not work around it.
+- Windows flagged secure (password fields, banking overlays) return no content - if the
+  capture comes back empty, say the app protects that screen and stop. Never ask the user
+  to disable screen security.
+
+## Capture
+
+1. Prefer the text tree first: run the accessibility offload tool's `ui dump` (compact) -
+   it returns the visible labels, buttons and text without any image leaving the device.
+2. Only when the tree misses something visual (an icon-only button, an image, colors that
+   carry meaning) take a screenshot with `ui screenshot` and read it yourself.
+3. Note the foreground app from the dump so the explanation names the app the user is in.
+
+## Explain
+
+- Answer in the app's current UI language (Arabic when the UI is Arabic).
+- Say what the screen IS in one or two sentences (which app, which screen, what state).
+- If there is an error or warning, translate it into plain words and say why it appeared.
+- End with exactly what to tap or do next, one step per line, at most three steps.
+- If nothing needs doing, say so in one line instead of inventing steps.
+- Never repeat sensitive values seen on screen (passwords, OTPs, full card numbers, balances)
+  back in the explanation; refer to them generically.
+"""
+
 private val SECURITY_BRIEF_CONTENT = """
 ---
 name: security-brief
