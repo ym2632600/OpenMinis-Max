@@ -1168,4 +1168,23 @@
     <string name="activity_log_cat_file_changed">ملف معدّل</string>
     <string name="activity_log_cat_consent">موافقة</string>
     <string name="activity_log_cat_config">تغيير إعدادات</string>
+    <!-- A11: daily token cap -->
+    <string name="usage_cap_dialog_title">تم الوصول إلى حد التوكن اليومي</string>
+    <string name="usage_cap_dialog_body">استخدمت %1$s من حدك اليومي البالغ %2$s توكن. الوكيل متوقف مؤقتًا حتى تقرر.</string>
+    <string name="usage_cap_send_anyway">الإرسال على أي حال</string>
+    <string name="usage_cap_keep_paused">الإبقاء على الإيقاف</string>
+    <string name="usage_cap_card_title">حد التوكن اليومي</string>
+    <string name="usage_cap_card_body">استُخدم %1$s من %2$s توكن اليوم</string>
+    <string name="usage_cap_card_off">لا يوجد حد يومي</string>
+    <string name="usage_cap_set">تحديد الحد</string>
+    <string name="usage_cap_change">تغيير</string>
+    <string name="usage_cap_dialog_set_title">حد التوكن اليومي</string>
+    <string name="usage_cap_dialog_set_body">يتوقف الوكيل مع تنبيه عندما تصل توكنات اليوم إلى هذا الرقم. اتركه فارغًا أو 0 لإلغاء الحد.</string>
+    <string name="usage_cap_field_label">التوكنات في اليوم</string>
+    <string name="usage_cap_save">حفظ</string>
+    <string name="usage_cap_remove">إزالة</string>
+    <string name="token_usage_section_today">اليوم</string>
+    <string name="token_usage_today_total">توكنات اليوم</string>
+    <string name="token_usage_daily_cap">الحد اليومي</string>
+    <string name="sessionlist_welcome_restore_backup">لديك نسخة احتياطية؟ استعد منها</string>
 </resources>

@@ -639,6 +639,7 @@ fun ChatScreen(
     val contextUsageHint by viewModel.contextUsageHint.collectAsState()
     // [T-android-compact-progress] null when no compaction is running.
     val compactProgress by viewModel.compactProgress.collectAsState()
+    val dailyCapPending by viewModel.dailyCapPendingPrompt.collectAsState()
     val error by viewModel.error.collectAsState()
     val modelName by viewModel.modelName.collectAsState()
     val sessionTitle by viewModel.sessionTitle.collectAsState()
@@ -7940,7 +7941,23 @@ fun ChatScreen(
                                     }
                                 },
                             )
-                            if (confirmStop) {
+                            if (dailyCapPending != null) {
+                                    val capToday by com.openminis.app.usage.UsageCapManager.todayTotal.collectAsState()
+                                    val capLimit by com.openminis.app.usage.UsageCapManager.dailyCap.collectAsState()
+                                    MinisAlertDialog(
+                                        onDismissRequest = { viewModel.resolveDailyCapPrompt(sendAnyway = false) },
+                                        title = stringResource(R.string.usage_cap_dialog_title),
+                                        text = stringResource(
+                                            R.string.usage_cap_dialog_body,
+                                            com.openminis.app.usage.formatTokenCount(capToday),
+                                            com.openminis.app.usage.formatTokenCount(capLimit),
+                                        ),
+                                        confirmText = stringResource(R.string.usage_cap_send_anyway),
+                                        onConfirm = { viewModel.resolveDailyCapPrompt(sendAnyway = true) },
+                                        dismissText = stringResource(R.string.usage_cap_keep_paused),
+                                    )
+                                }
+                                if (confirmStop) {
                                 MinisAlertDialog(
                                     onDismissRequest = { confirmStop = false },
                                     title = stringResource(R.string.chat_stop_confirm_title),

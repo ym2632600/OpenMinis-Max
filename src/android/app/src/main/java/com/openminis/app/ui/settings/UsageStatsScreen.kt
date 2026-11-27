@@ -23,7 +23,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -32,7 +35,9 @@ import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -57,6 +62,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -240,6 +246,7 @@ fun UsageStatsScreen(
     }
 
     SettingsScaffold(title = stringResource(R.string.usage_title), onBack = onBack) {
+        DailyLimitCard()
         RangeTabs(range) { range = it }
         // Switching ranges keeps the previous content on screen under a thin
         // progress bar instead of flashing an empty page.
@@ -731,5 +738,99 @@ private fun Footer() {
         for (note in listOf(R.string.usage_note_retained, R.string.usage_note_background)) {
             Text(stringResource(note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
+    }
+}
+
+// ─── A11: daily token cap ─────────────────────────────────────────────────────
+
+@Composable
+private fun DailyLimitCard() {
+    val today by com.openminis.app.usage.UsageCapManager.todayTotal.collectAsState()
+    val cap by com.openminis.app.usage.UsageCapManager.dailyCap.collectAsState()
+    var editing by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { com.openminis.app.usage.UsageCapManager.refreshToday() }
+
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(
+                text = stringResource(R.string.usage_cap_card_title),
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+            )
+            Text(
+                text = if (cap > 0) {
+                    stringResource(
+                        R.string.usage_cap_card_body,
+                        com.openminis.app.usage.formatTokenCount(today),
+                        com.openminis.app.usage.formatTokenCount(cap),
+                    )
+                } else {
+                    stringResource(R.string.usage_cap_card_off)
+                },
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            if (cap > 0) {
+                LinearProgressIndicator(
+                    @Suppress("DEPRECATION")
+                    progress = (today.toFloat() / cap.toFloat()).coerceIn(0f, 1f),
+                    modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
+                )
+            }
+        }
+        Spacer(Modifier.width(12.dp))
+        OutlinedButton(onClick = { editing = true }) {
+            Text(stringResource(if (cap > 0) R.string.usage_cap_change else R.string.usage_cap_set))
+        }
+    }
+
+    if (editing) {
+        var input by remember { mutableStateOf(if (cap > 0) cap.toString() else "") }
+        AlertDialog(
+            onDismissRequest = { editing = false },
+            title = { Text(stringResource(R.string.usage_cap_dialog_set_title)) },
+            text = {
+                Column {
+                    Text(
+                        text = stringResource(R.string.usage_cap_dialog_set_body),
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = input,
+                        onValueChange = { v -> input = v.filter(Char::isDigit).take(12) },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        singleLine = true,
+                        label = { Text(stringResource(R.string.usage_cap_field_label)) },
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    com.openminis.app.usage.UsageCapManager.setDailyCap(input.toLongOrNull() ?: 0L)
+                    editing = false
+                }) {
+                    Text(stringResource(R.string.usage_cap_save))
+                }
+            },
+            dismissButton = {
+                Row {
+                    if (cap > 0) {
+                        TextButton(onClick = {
+                            com.openminis.app.usage.UsageCapManager.setDailyCap(0L)
+                            editing = false
+                        }) {
+                            Text(stringResource(R.string.usage_cap_remove))
+                        }
+                    }
+                    TextButton(onClick = { editing = false }) {
+                        Text(stringResource(R.string.common_cancel))
+                    }
+                }
+            },
+        )
     }
 }

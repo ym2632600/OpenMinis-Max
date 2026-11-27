@@ -2832,4 +2832,22 @@
     <string name="activity_log_cat_file_changed">File changed</string>
     <string name="activity_log_cat_consent">Consent</string>
     <string name="activity_log_cat_config">Config change</string>
+    <!-- A11: daily token cap -->
+    <string name="usage_cap_dialog_title">Daily token limit reached</string>
+    <string name="usage_cap_dialog_body">You have used %1$s of your %2$s daily token limit. The agent is paused until you decide.</string>
+    <string name="usage_cap_send_anyway">Send anyway</string>
+    <string name="usage_cap_keep_paused">Keep paused</string>
+    <string name="usage_cap_card_title">Daily token limit</string>
+    <string name="usage_cap_card_body">%1$s of %2$s tokens used today</string>
+    <string name="usage_cap_card_off">No daily limit set</string>
+    <string name="usage_cap_set">Set limit</string>
+    <string name="usage_cap_change">Change</string>
+    <string name="usage_cap_dialog_set_title">Daily token limit</string>
+    <string name="usage_cap_dialog_set_body">The agent pauses with a prompt when today\u2019s tokens reach this number. Leave empty or 0 for no limit.</string>
+    <string name="usage_cap_field_label">Tokens per day</string>
+    <string name="usage_cap_save">Save</string>
+    <string name="usage_cap_remove">Remove</string>
+    <string name="token_usage_section_today">Today</string>
+    <string name="token_usage_today_total">Tokens today</string>
+    <string name="token_usage_daily_cap">Daily limit</string>
 </resources>

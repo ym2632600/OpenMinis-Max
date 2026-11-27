@@ -9431,10 +9431,32 @@ class ChatViewModel(
         AppLogger.info(TAG, "[provider-edit] rebuilt provider for edited instance ${id.take(8)} (responses=${instance.useResponsesAPI})")
     }
 
+    /** [A11] Non-null while the daily token cap prompt is showing; the value
+     *  is the prompt text waiting for the user's decision. */
+    private val _dailyCapPendingPrompt = MutableStateFlow<String?>(null)
+    val dailyCapPendingPrompt: StateFlow<String?> = _dailyCapPendingPrompt.asStateFlow()
+
+    /** [A11] Cap prompt decision: send anyway (one-shot bypass) or stay paused. */
+    fun resolveDailyCapPrompt(sendAnyway: Boolean) {
+        val pending = _dailyCapPendingPrompt.value
+        _dailyCapPendingPrompt.value = null
+        if (sendAnyway && pending != null) {
+            com.openminis.app.usage.UsageCapManager.allowOnce()
+            sendMessage(pending)
+        }
+    }
+
     fun sendMessage(text: String) {
         // [T-android-stop-sibling-subagent] New work in this session lifts the
         // stop: delegations from here on may drive the turn again.
         com.openminis.app.agent.jobs.AgentJobRegistry.clearDelegationMute(activeSessionId)
+        // [A11] Daily token cap: pause with a prompt when today's total has
+        // reached the user-set limit (0 = off). Cache-based; refreshed below.
+        if (com.openminis.app.usage.UsageCapManager.shouldPauseForCap()) {
+            _dailyCapPendingPrompt.value = text
+            return
+        }
+        com.openminis.app.usage.UsageCapManager.refreshToday()
         sendMessage(text, skipContextCheck = false, headless = false)
     }
 

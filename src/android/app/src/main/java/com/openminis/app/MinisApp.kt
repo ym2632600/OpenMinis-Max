@@ -266,6 +266,8 @@ class MinisApp : Application(), ImageLoaderFactory {
         com.openminis.app.consent.ConsentManager.init(this)
         // B14: activity log facade (writes go to the activity_log table).
         com.openminis.app.activitylog.ActivityLog.init(this)
+        // A11: daily token cap (loads the cap, warms the today-total cache).
+        com.openminis.app.usage.UsageCapManager.init(this)
         // [T-android-tls-trust-error] Localized text for a rejected certificate;
         // LLMError has no Context of its own.
         com.openminis.app.data.model.CertificateErrorText.resolver = { kind, host ->

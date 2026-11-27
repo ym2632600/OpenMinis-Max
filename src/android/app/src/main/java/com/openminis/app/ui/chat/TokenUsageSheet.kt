@@ -15,6 +15,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -56,6 +57,7 @@ fun TokenUsageSheet(
     val thinking = remember { viewModel.thinkingInfo() }
 
     LaunchedEffect(Unit) {
+        com.openminis.app.usage.UsageCapManager.refreshToday()
         stats = viewModel.loadSessionTokenStats()
     }
 
@@ -99,6 +101,17 @@ fun TokenUsageSheet(
                 val inputTotal = (s?.input ?: 0L) + (s?.cacheRead ?: 0L) + (s?.cacheWrite ?: 0L)
                 StatRow(stringResource(R.string.token_usage_input_with_cache), formatTokens(inputTotal))
                 StatRow(stringResource(R.string.token_usage_output), formatTokens(s?.output ?: 0L))
+            }
+
+            // A11: live per-day counter + the user-set daily cap.
+            StatSection(title = stringResource(R.string.token_usage_section_today)) {
+                val today by com.openminis.app.usage.UsageCapManager.todayTotal.collectAsState()
+                val cap by com.openminis.app.usage.UsageCapManager.dailyCap.collectAsState()
+                StatRow(stringResource(R.string.token_usage_today_total), formatTokens(today))
+                StatRow(
+                    stringResource(R.string.token_usage_daily_cap),
+                    if (cap > 0) formatTokens(cap) else offText,
+                )
             }
 
             StatSection(title = stringResource(R.string.token_usage_section_cache)) {
