@@ -24,8 +24,8 @@ import com.openminis.app.MinisApp
 import com.openminis.app.R
 import com.openminis.app.deeplink.DeepLinkAction
 import com.openminis.app.deeplink.DeepLinkHandler
-import com.openminis.app.soul.SoulIcon
-import com.openminis.app.soul.SoulStore
+import com.openminis.app.agent.SoulIcon
+import com.openminis.app.agent.SoulStore
 import kotlin.math.abs
 
 /**
@@ -238,7 +238,7 @@ class BubbleOverlayController(private val context: Context) {
                 FrameLayout.LayoutParams.MATCH_PARENT,
                 FrameLayout.LayoutParams.MATCH_PARENT,
             )
-            background = ovalDrawable(BUBBLE_DISC_COLOR)
+            background = ovalDrawable(BUBBLE_DISC_COLOR.toInt())
             // The oval background supplies an oval outline, so the icon is clipped to the circle.
             clipToOutline = true
             contentDescription = "Open Minis"
@@ -256,7 +256,7 @@ class BubbleOverlayController(private val context: Context) {
             textSize = 14f
             setTextColor(Color.WHITE)
             gravity = Gravity.CENTER
-            background = ovalDrawable(CHIP_COLOR)
+            background = ovalDrawable(CHIP_COLOR.toInt())
             contentDescription = "Show quick actions"
             setOnClickListener { toggleActions() }
         }
@@ -282,7 +282,7 @@ class BubbleOverlayController(private val context: Context) {
             textSize = 12f
             setTextColor(Color.WHITE)
             gravity = Gravity.CENTER
-            background = roundedDrawable(CHIP_COLOR, dpToPx(20))
+            background = roundedDrawable(CHIP_COLOR.toInt(), dpToPx(20))
             contentDescription = action.label
             setOnClickListener {
                 collapseActions()
