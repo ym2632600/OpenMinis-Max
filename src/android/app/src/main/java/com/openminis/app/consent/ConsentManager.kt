@@ -2,6 +2,8 @@ package com.openminis.app.consent
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.openminis.app.R
+import com.openminis.app.activitylog.ActivityLog
 import com.openminis.app.logging.AppLogger
 import java.util.UUID
 import kotlin.coroutines.Continuation
@@ -63,9 +65,13 @@ object ConsentManager {
     @Volatile
     private var prefs: SharedPreferences? = null
 
+    @Volatile
+    private var appContext: Context? = null
+
     /** Called once from MinisApp.onCreate. Safe to call again (no-op). */
     fun init(context: Context) {
         if (prefs != null) return
+        appContext = context.applicationContext
         prefs = context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         _grantedScopes.value = loadGrants()
     }
@@ -77,7 +83,18 @@ object ConsentManager {
 
     fun isAlwaysAllowed(scope: SensitiveScope): Boolean = _grantedScopes.value.contains(scope)
 
-    fun grantAlways(scope: SensitiveScope) = updateGrants(_grantedScopes.value + scope)
+    fun grantAlways(scope: SensitiveScope) {
+        updateGrants(_grantedScopes.value + scope)
+        // B14: granting always-allow is itself an auditable, reversible action.
+        val label = appContext?.getString(scope.labelRes) ?: scope.name
+        val title = appContext?.getString(R.string.activity_log_consent_grant, label) ?: label
+        ActivityLog.record(
+            ActivityLog.CATEGORY_CONSENT,
+            title,
+            undoKind = ActivityLog.UNDO_REVOKE_CONSENT_GRANT,
+            undoPayload = scope.name,
+        )
+    }
 
     fun revoke(scope: SensitiveScope) = updateGrants(_grantedScopes.value - scope)
 

@@ -24,6 +24,7 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.Lan
 import androidx.compose.material.icons.outlined.Dns
+import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.VerifiedUser
 import androidx.compose.material.icons.outlined.Router
 import androidx.compose.material.icons.outlined.VpnLock
@@ -108,6 +109,7 @@ fun SettingsScreen(
     onSoulClick: () -> Unit = {},
     onPermissionsClick: () -> Unit = {},
     onConsentClick: () -> Unit = {},
+    onActivityLogClick: () -> Unit = {},
     onUsageClick: () -> Unit = {},
     onAppearanceClick: () -> Unit = {},
     onLogsClick: () -> Unit = {},
@@ -345,6 +347,14 @@ fun SettingsScreen(
                     title = stringResource(R.string.consent_settings_title),
                     subtitle = stringResource(R.string.settings_consent_subtitle),
                     onClick = onConsentClick,
+                )
+                // B14: activity log
+                SettingsItem(
+                    icon = Icons.Outlined.History,
+                    iconColor = Color(0xFF5AC8FA),
+                    title = stringResource(R.string.activity_log_title),
+                    subtitle = stringResource(R.string.settings_activity_log_subtitle),
+                    onClick = onActivityLogClick,
                 )
                 // A5: data-flow transparency
                 SettingsItem(

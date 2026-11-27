@@ -264,6 +264,8 @@ class MinisApp : Application(), ImageLoaderFactory {
         com.openminis.app.service.OAuthWaitKeepAlive.install(this)
         // B13: central consent layer - loads persisted always-allow scopes.
         com.openminis.app.consent.ConsentManager.init(this)
+        // B14: activity log facade (writes go to the activity_log table).
+        com.openminis.app.activitylog.ActivityLog.init(this)
         // [T-android-tls-trust-error] Localized text for a rejected certificate;
         // LLMError has no Context of its own.
         com.openminis.app.data.model.CertificateErrorText.resolver = { kind, host ->

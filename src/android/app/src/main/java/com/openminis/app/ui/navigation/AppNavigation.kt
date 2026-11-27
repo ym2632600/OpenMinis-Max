@@ -72,6 +72,7 @@ import com.openminis.app.ui.settings.LogDetailScreen
 import com.openminis.app.ui.settings.LogManagementScreen
 import com.openminis.app.ui.settings.MemoryFileEditScreen
 import com.openminis.app.ui.settings.MemoryManagementScreen
+import com.openminis.app.ui.settings.ActivityLogScreen
 import com.openminis.app.ui.settings.ConsentSettingsScreen
 import com.openminis.app.ui.settings.OffloadPermissionScreen
 import com.openminis.app.ui.settings.ShizukuPermissionScreen
@@ -190,6 +191,7 @@ object Routes {
     const val MEMORY_FILE_EDIT = "memory_file/{fileName}/{isGlobal}"
     const val PERMISSIONS = "permissions"
     const val CONSENT = "consent"
+    const val ACTIVITY_LOG = "activity_log"
     /**
      * T322 / [T-android-privileged-backend]: Shizuku-protocol manager
      * walkthrough — handles both Shizuku and AXManager (they share the same
@@ -670,6 +672,7 @@ fun AppNavigation(
                 onSoulClick = { navController.safeNavigate(Routes.SOUL) },
                 onPermissionsClick = { navController.safeNavigate(Routes.PERMISSIONS) },
                 onConsentClick = { navController.safeNavigate(Routes.CONSENT) },
+                onActivityLogClick = { navController.safeNavigate(Routes.ACTIVITY_LOG) },
                 onUsageClick = { navController.safeNavigate(Routes.USAGE_STATS) },
                 onAppearanceClick = { navController.safeNavigate(Routes.APPEARANCE) },
                 onBackgroundClick = { navController.safeNavigate(Routes.BACKGROUND) },
@@ -1469,6 +1472,12 @@ fun AppNavigation(
                     onBack = { navController.safePopBackStack() },
                 )
             }
+        }
+
+        composable(Routes.ACTIVITY_LOG) {
+            ActivityLogScreen(
+                onBack = { navController.safePopBackStack() },
+            )
         }
 
         composable(Routes.CONSENT) {

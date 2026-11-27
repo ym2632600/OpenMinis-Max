@@ -9,13 +9,14 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
     entities = [
+        ActivityLogEntity::class,
         ChatSessionEntity::class,
         MessageEntity::class,
         CompactMarkerEntity::class,
         WebAppShortcutEntity::class,
         FolderEntity::class,
     ],
-    version = 15,
+    version = 16,
     // [T-android-downgrade-compat] Kept ON so MigrationTestHelper and CI can
     // validate every migration (and its downgrade counterpart) against the
     // committed schema json. Without it the upgrade/downgrade chain has no
@@ -25,6 +26,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 abstract class AppDatabase : RoomDatabase() {
     abstract fun chatDao(): ChatDao
     abstract fun webAppShortcutDao(): WebAppShortcutDao
+    abstract fun activityLogDao(): ActivityLogDao
 
     companion object {
         @Volatile
@@ -396,6 +398,36 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        /** [B14] Activity log: chronological record of agent actions with
+         *  optional undo metadata ([ActivityLogEntity]). */
+        val MIGRATION_15_16 = object : Migration(15, 16) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `activity_log` (
+                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        `timestamp` INTEGER NOT NULL,
+                        `category` TEXT NOT NULL,
+                        `title` TEXT NOT NULL,
+                        `details` TEXT,
+                        `undoKind` TEXT,
+                        `undoPayload` TEXT,
+                        `undoneAt` INTEGER
+                    )
+                    """.trimIndent()
+                )
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_activity_log_timestamp` ON `activity_log` (`timestamp`)")
+            }
+        }
+
+        /** [B14] Downgrade counterpart of [MIGRATION_15_16]: drops only the
+         *  table it added; all pre-existing data untouched. */
+        val MIGRATION_16_15 = object : Migration(16, 15) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("DROP TABLE IF EXISTS `activity_log`")
+            }
+        }
+
         fun getInstance(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 INSTANCE ?: Room.databaseBuilder(
@@ -410,7 +442,7 @@ abstract class AppDatabase : RoomDatabase() {
                         MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6,
                         MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11,
                         MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_12, MIGRATION_12_11,
-                        MIGRATION_13_14, MIGRATION_14_13, MIGRATION_14_15, MIGRATION_15_14,
+                        MIGRATION_13_14, MIGRATION_14_13, MIGRATION_14_15, MIGRATION_15_14, MIGRATION_15_16, MIGRATION_16_15,
                     )
                     .build()
                     .also { INSTANCE = it }

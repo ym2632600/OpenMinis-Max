@@ -1154,4 +1154,18 @@
     <string name="consent_scope_delete_data_desc">حذف ملفات أو رسائل أو بيانات أخرى</string>
     <string name="consent_scope_accessibility_action">التصرف في تطبيقات أخرى</string>
     <string name="consent_scope_accessibility_action_desc">النقر والكتابة والتمرير عبر إمكانية الوصول</string>
+    <!-- B14: activity log -->
+    <string name="activity_log_title">سجل النشاط</string>
+    <string name="settings_activity_log_subtitle">ما فعله الوكيل، مع التراجع عند الإمكان</string>
+    <string name="activity_log_empty">لا يوجد نشاط مسجل بعد.</string>
+    <string name="activity_log_undo">تراجع</string>
+    <string name="activity_log_close">إغلاق</string>
+    <string name="activity_log_undone">تم التراجع</string>
+    <string name="activity_log_sms_sent">أُرسلت رسالة SMS إلى %1$s</string>
+    <string name="activity_log_consent_grant">مُنح «السماح دائمًا»: %1$s</string>
+    <string name="activity_log_cat_tool_call">استدعاء أداة</string>
+    <string name="activity_log_cat_message_sent">رسالة مُرسلة</string>
+    <string name="activity_log_cat_file_changed">ملف معدّل</string>
+    <string name="activity_log_cat_consent">موافقة</string>
+    <string name="activity_log_cat_config">تغيير إعدادات</string>
 </resources>

@@ -2818,4 +2818,18 @@
     <string name="consent_scope_delete_data_desc">Deleting files, messages or other data</string>
     <string name="consent_scope_accessibility_action">Act in other apps</string>
     <string name="consent_scope_accessibility_action_desc">Taps, typing and scrolling via accessibility</string>
+    <!-- B14: activity log -->
+    <string name="activity_log_title">Activity log</string>
+    <string name="settings_activity_log_subtitle">What the agent did, with undo where possible</string>
+    <string name="activity_log_empty">No activity recorded yet.</string>
+    <string name="activity_log_undo">Undo</string>
+    <string name="activity_log_close">Close</string>
+    <string name="activity_log_undone">Undone</string>
+    <string name="activity_log_sms_sent">SMS sent to %1$s</string>
+    <string name="activity_log_consent_grant">Always-allow granted: %1$s</string>
+    <string name="activity_log_cat_tool_call">Tool call</string>
+    <string name="activity_log_cat_message_sent">Message sent</string>
+    <string name="activity_log_cat_file_changed">File changed</string>
+    <string name="activity_log_cat_consent">Consent</string>
+    <string name="activity_log_cat_config">Config change</string>
 </resources>

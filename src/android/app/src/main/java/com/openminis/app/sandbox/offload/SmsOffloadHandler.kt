@@ -8,6 +8,7 @@ import android.provider.Telephony
 import android.telephony.SmsManager
 import androidx.core.content.ContextCompat
 import com.openminis.app.R
+import com.openminis.app.activitylog.ActivityLog
 import com.openminis.app.consent.ConsentManager
 import com.openminis.app.consent.SensitiveScope
 import com.openminis.app.logging.AppLogger
@@ -147,6 +148,12 @@ class SmsOffloadHandler(private val context: Context) : NativeOffloadHandler {
             smsManager.sendTextMessage(number, null, message, null, null)
         }
         AppLogger.info(TAG, "SMS sent to $number (${parts.size} part(s), ${message.length} chars)")
+        // B14: an SMS cannot be unsent, so this entry carries no undo.
+        ActivityLog.record(
+            ActivityLog.CATEGORY_MESSAGE_SENT,
+            context.getString(R.string.activity_log_sms_sent, number),
+            details = message,
+        )
         val body = JSONObject()
             .put("sent", true)
             .put("to", number)
