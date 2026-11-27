@@ -4,9 +4,6 @@ import android.content.Context
 import android.net.Uri
 import androidx.core.content.FileProvider
 import java.io.File
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 /**
  * B8: shared camera-output staging for the chat composer and the camera offload bridge.
@@ -17,14 +14,20 @@ import java.util.Locale
  * authority ("${applicationId}.fileprovider"). There is exactly one copy of this
  * function; the composer calls this one.
  *
- * Creates the staging file for a camera capture and returns its [Uri] (to hand to the
- * camera app) together with the [File] the photo lands in. The file is created eagerly
- * so the camera app always has a real file to write into.
+ * Create an empty JPEG file under filesDir/camera-photos/ and return a
+ * FileProvider content URI for it, plus the underlying File. The camera
+ * app writes the captured image into this URI synchronously.
+ *
+ * Bug 1 (MIUI): the previous version put the staging file under cacheDir,
+ * which MIUI may clear while the camera Activity is in flight. Moving to
+ * filesDir keeps the URI valid until we explicitly delete it.
  */
-fun createCameraOutputUri(context: Context): Pair<Uri, File>? {
-    val dir = File(context.filesDir, "camera-photos").apply { mkdirs() }
-    val name = "photo_" + SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date()) + ".jpg"
-    val photoFile = File(dir, name)
-    photoFile.createNewFile()
-    return FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", photoFile) to photoFile
+fun createCameraOutputUri(context: Context): Pair<Uri, File> {
+    val dir = File(context.filesDir, "camera-photos").also { it.mkdirs() }
+    val ts = System.currentTimeMillis()
+    val file = File(dir, "photo-$ts.jpg")
+    file.createNewFile()
+    val authority = context.packageName + ".fileprovider"
+    val uri = FileProvider.getUriForFile(context, authority, file)
+    return uri to file
 }
