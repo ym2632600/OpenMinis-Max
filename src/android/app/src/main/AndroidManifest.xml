@@ -494,6 +494,11 @@
                     android:path="/callback" />
             </intent-filter>
         </activity>
+        <!-- B8: headless camera-capture bridge (see CameraCaptureActivity). -->
+        <activity
+            android:name=".offload.CameraCaptureActivity"
+            android:exported="false"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
 
         <!-- Agent foreground service -->
         <!-- T-android-fgs-timeout-crash: type=mediaPlayback to escape the
