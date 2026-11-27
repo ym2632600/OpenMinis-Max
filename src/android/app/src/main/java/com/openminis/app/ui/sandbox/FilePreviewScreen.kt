@@ -160,7 +160,7 @@ fun FilePreviewScreen(
         }
     }
     androidx.compose.runtime.key(current.file.absolutePath) {
-        FilePreviewContent(item = current, onBack = back, onMarkdownLink = onMarkdownLink)
+        FilePreviewContent(item = current, onBack = back, onMarkdownLink = onMarkdownLink, onEdit = onEdit)
     }
     webUrl?.let { url ->
         com.openminis.app.ui.components.UrlPreviewSheet(url = url, onDismiss = { webUrl = null })
@@ -173,6 +173,7 @@ private fun FilePreviewContent(
     item: FileItem,
     onBack: () -> Unit,
     onMarkdownLink: (String) -> Unit,
+    onEdit: (() -> Unit)? = null,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
