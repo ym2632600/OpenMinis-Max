@@ -79,6 +79,8 @@ import kotlin.math.roundToInt
 // -- Preference Keys --
 const val PREF_APPEARANCE = "appearance_prefs"
 const val KEY_THEME_MODE = "theme_mode"            // 0=System, 1=Light, 2=Dark
+// C16: glassmorphism overlay - translucent surfaces over a gradient backdrop.
+const val KEY_GLASS_EFFECT = "glass_effect"        // Boolean, default false
 const val KEY_LAUNCH_SESSION = "launch_session"    // 0=Auto, 1=LastSession, 2=NewChat, 3=Home
 // iOS-aligned key names — match `@AppStorage("returnKeyBehavior")` and
 // `@AppStorage("keepScreenAwakeDuringTasks")` in ContentView.swift so
@@ -268,6 +270,9 @@ fun getAppearancePrefs(context: Context): SharedPreferences =
 fun getThemeMode(context: Context): Int =
     getAppearancePrefs(context).getInt(KEY_THEME_MODE, 0)
 
+fun isGlassEffectEnabled(context: Context): Boolean =
+    getAppearancePrefs(context).getBoolean(KEY_GLASS_EFFECT, false)
+
 fun getFontScale(context: Context, key: String): Float =
     fontScaleForLevel(getAppearancePrefs(context).getInt(key, 0))
 
@@ -288,6 +293,7 @@ fun AppearanceScreen(
     var launchSession by remember { mutableIntStateOf(prefs.getInt(KEY_LAUNCH_SESSION, 0)) }
     var returnKeyBehavior by remember { mutableIntStateOf(prefs.getInt(KEY_RETURN_KEY_BEHAVIOR, 0)) }
     var keepScreenAwake by remember { mutableStateOf(prefs.getBoolean(KEY_KEEP_SCREEN_AWAKE, false)) }
+    var glassEffect by remember { mutableStateOf(prefs.getBoolean(KEY_GLASS_EFFECT, false)) }
     var toolPreview by remember { mutableStateOf(prefs.getBoolean(KEY_TOOL_PREVIEW, true)) }
     var foldTools by remember { mutableStateOf(prefs.getBoolean(KEY_FOLD_TOOLS, FOLD_TOOLS_DEFAULT)) }
     var autoFocusAfterReply by remember { mutableStateOf(prefs.getBoolean(KEY_AUTO_FOCUS_AFTER_REPLY, true)) }
@@ -423,6 +429,26 @@ fun AppearanceScreen(
                     showDivider = idx < returnRows.size - 1,
                 )
             }
+        }
+
+        // -- Glass Effect (C16) --
+        // Glassmorphism: surfaces turn translucent so the window's gradient
+        // backdrop shows through. Independent of light/dark/system.
+        SettingsSection(
+            header = stringResource(R.string.appearance_section_glass),
+            footer = stringResource(R.string.appearance_glass_footer),
+        ) {
+            SettingsSwitchRow(
+                icon = Icons.Outlined.BlurOn,
+                iconColor = tilePurple,
+                title = stringResource(R.string.appearance_glass_title),
+                checked = glassEffect,
+                onCheckedChange = {
+                    glassEffect = it
+                    prefs.edit().putBoolean(KEY_GLASS_EFFECT, it).apply()
+                },
+                showDivider = false,
+            )
         }
 
         // -- Keep Screen Awake --

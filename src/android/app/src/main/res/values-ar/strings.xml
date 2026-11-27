@@ -1254,4 +1254,8 @@
     <string name="finance_weekly_spent">صرفت: %1$s</string>
     <string name="finance_weekly_received">استلمت: %1$s</string>
     <string name="finance_weekly_top">الأكثر: %1$s</string>
+    <!-- C16: glass theme -->
+    <string name="appearance_section_glass">التأثير الزجاجي</string>
+    <string name="appearance_glass_title">الثيم الزجاجي</string>
+    <string name="appearance_glass_footer">الأسطح تصبح شبه شفافة فوق تدرج لوني ناعم لمظهر الزجاج المصنفر. يعمل مع الوضع الفاتح أو الداكن أو التلقائي.</string>
 </resources>

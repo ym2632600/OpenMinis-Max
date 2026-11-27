@@ -7,9 +7,13 @@ import androidx.compose.material3.Shapes
 import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
+import android.app.Activity
+import android.graphics.drawable.GradientDrawable
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.text.style.TextAlign
@@ -152,13 +156,57 @@ private val MinisShapes = Shapes(
     extraLarge = RoundedCornerShape(28.dp),   // Dialog, BottomSheet
 )
 
+/**
+ * C16: glassmorphism variant of a scheme - surfaces go translucent so the
+ * gradient painted on the window shows through, giving the frosted-glass
+ * read. Text/outline colors are untouched, keeping contrast identical.
+ */
+private fun glassify(base: androidx.compose.material3.ColorScheme, dark: Boolean): androidx.compose.material3.ColorScheme {
+    val surfaceAlpha = if (dark) 0.45f else 0.55f
+    val bgAlpha = if (dark) 0.30f else 0.35f
+    return base.copy(
+        background = base.background.copy(alpha = bgAlpha),
+        surface = base.surface.copy(alpha = bgAlpha),
+        surfaceVariant = base.surfaceVariant.copy(alpha = surfaceAlpha),
+        surfaceContainerLowest = base.surfaceContainerLowest.copy(alpha = bgAlpha),
+        surfaceContainerLow = base.surfaceContainerLow.copy(alpha = surfaceAlpha),
+        surfaceContainer = base.surfaceContainer.copy(alpha = surfaceAlpha),
+        surfaceContainerHigh = base.surfaceContainerHigh.copy(alpha = surfaceAlpha + 0.1f),
+        surfaceContainerHighest = base.surfaceContainerHighest.copy(alpha = surfaceAlpha + 0.1f),
+        surfaceBright = base.surfaceBright.copy(alpha = surfaceAlpha),
+        surfaceDim = base.surfaceDim.copy(alpha = bgAlpha),
+    )
+}
+
 @Composable
 fun MinisTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     fontScale: Float = 1f,
+    glassEffect: Boolean = false,
     content: @Composable () -> Unit,
 ) {
-    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
+    val baseScheme = if (darkTheme) DarkColorScheme else LightColorScheme
+    val colorScheme = if (glassEffect) glassify(baseScheme, darkTheme) else baseScheme
+
+    // C16: the gradient the translucent surfaces float over. Restored to
+    // the default (null) when glass is off.
+    val context = LocalContext.current
+    SideEffect {
+        (context as? Activity)?.window?.setBackgroundDrawable(
+            if (glassEffect) {
+                GradientDrawable(
+                    GradientDrawable.Orientation.TL_BR,
+                    if (darkTheme) {
+                        intArrayOf(0xFF1A1B4B.toInt(), 0xFF3B2E6E.toInt(), 0xFF0F2027.toInt())
+                    } else {
+                        intArrayOf(0xFFA8C0FF.toInt(), 0xFFF8C8DC.toInt(), 0xFFE0F7FA.toInt())
+                    },
+                )
+            } else {
+                null
+            },
+        )
+    }
     val typography = scaledTypography(fontScale)
     val chatPalette = if (darkTheme) DarkChatPalette else LightChatPalette
 

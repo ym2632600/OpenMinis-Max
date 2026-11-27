@@ -2917,4 +2917,8 @@
     <string name="finance_weekly_spent">Spent: %1$s</string>
     <string name="finance_weekly_received">Received: %1$s</string>
     <string name="finance_weekly_top">Top: %1$s</string>
+    <!-- C16: glass theme -->
+    <string name="appearance_section_glass">Glass effect</string>
+    <string name="appearance_glass_title">Glassmorphism theme</string>
+    <string name="appearance_glass_footer">Surfaces turn translucent over a soft gradient for a frosted-glass look. Works with light, dark or system mode.</string>
 </resources>
