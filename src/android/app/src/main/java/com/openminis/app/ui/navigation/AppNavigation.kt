@@ -138,6 +138,7 @@ object Routes {
     fun mirrorCategoryDetail(categoryKey: String) = "mirror_category/$categoryKey"
     const val FILE_BROWSER = "file_browser"
     const val FILE_PREVIEW = "file_preview"
+    const val CODE_EDITOR = "code_editor"
     const val ENV_VARS = "env_vars"
     const val NETWORK = "network"
     // [FEAT-261021-04] The other pages of Settings > Network.
@@ -251,6 +252,11 @@ object Routes {
 }
 
 /** Holder for file preview navigation state (not serializable via nav args). */
+/** C14: hands the tapped file to the code-editor dialog (same pattern as FilePreviewHolder). */
+internal object CodeEditorHolder {
+    var currentItem: com.openminis.app.ui.sandbox.FileItem? = null
+}
+
 internal object FilePreviewHolder {
     var currentItem: FileItem? = null
     /**
@@ -1308,6 +1314,25 @@ fun AppNavigation(
             FilePreviewScreen(
                 item = item,
                 sessionId = FilePreviewHolder.currentSessionId,
+                onBack = { navController.safePopBackStack() },
+                onEdit = {
+                    CodeEditorHolder.currentItem = item
+                    navController.navigate(Routes.CODE_EDITOR)
+                },
+            )
+        }
+
+        // C14: code editor dialog, mirroring the file-preview dialog chrome.
+        dialog(
+            route = Routes.CODE_EDITOR,
+            dialogProperties = DialogProperties(
+                usePlatformDefaultWidth = false,
+                decorFitsSystemWindows = false,
+            ),
+        ) {
+            val editItem = CodeEditorHolder.currentItem ?: return@dialog
+            com.openminis.app.ui.sandbox.CodeEditorScreen(
+                item = editItem,
                 onBack = { navController.safePopBackStack() },
             )
         }

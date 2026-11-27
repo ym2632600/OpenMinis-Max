@@ -48,6 +48,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.InsertDriveFile
 import androidx.compose.material.icons.filled.Android
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Print
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -102,6 +103,8 @@ fun FilePreviewScreen(
     item: FileItem,
     onBack: () -> Unit,
     sessionId: String? = null,
+    /** C14: open this file in the code editor. Null hides the Edit action. */
+    onEdit: (() -> Unit)? = null,
 ) {
     // [T-md-preview-links] Files opened from links inside a previewed
     // markdown document replace the page; Back walks this history before it
@@ -275,6 +278,14 @@ private fun FilePreviewContent(
                     }
                 },
                 actions = {
+                    // C14: Edit opens text-ish files in the code editor.
+                    if (onEdit != null && (item.isTextFile || item.isJsonFile ||
+                            item.isMarkdownFile || item.isHtmlFile || item.isCsvFile)
+                    ) {
+                        IconButton(onClick = onEdit) {
+                            Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.filepreview_edit))
+                        }
+                    }
                     // T142: Share works for any file — FileProvider URI +
                     // ACTION_SEND + FLAG_GRANT_READ_URI_PERMISSION. iOS parity.
                     IconButton(onClick = { shareFile(context, item) }) {

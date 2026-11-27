@@ -505,6 +505,10 @@
     <string name="filebrowser_hide_hidden">Hide Hidden Files</string>
     <string name="filebrowser_sort_by">Sort By</string>
     <string name="filepreview_share">Share</string>
+    <string name="filepreview_edit">Edit</string>
+    <string name="code_editor_save">Save</string>
+    <string name="code_editor_saved">Saved</string>
+    <string name="code_editor_cannot_open">This file cannot be edited (too large or unreadable).</string>
     <string name="action_print">Print</string>
     <string name="filepreview_save_to_gallery">Save to gallery</string>
     <string name="filepreview_save_as">Save as…</string>

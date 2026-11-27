@@ -311,6 +311,10 @@
     <string name="filebrowser_copy_abs_path">نسخ المسار الكامل</string>
     <string name="filebrowser_copy_abs_path_toast">تم نسخ المسار</string>
     <string name="filepreview_share">مشاركة</string>
+    <string name="filepreview_edit">تحرير</string>
+    <string name="code_editor_save">حفظ</string>
+    <string name="code_editor_saved">تم الحفظ</string>
+    <string name="code_editor_cannot_open">لا يمكن تحرير هذا الملف (كبير جدًا أو غير قابل للقراءة).</string>
     <string name="action_print">طباعة</string>
     <string name="filepreview_save_to_gallery">حفظ في المعرض</string>
     <string name="filepreview_save_as">حفظ باسم…</string>

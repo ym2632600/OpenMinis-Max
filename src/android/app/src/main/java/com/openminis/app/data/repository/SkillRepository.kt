@@ -1253,6 +1253,8 @@ class SkillRepository(private val context: Context) {
         installBundledSkill("screen-recap", "1.0.0", SCREEN_RECAP_CONTENT)
         // C6: app generator - idea to scaffolded Android project built via free CI.
         installBundledSkill("app-generator", "1.0.0", APP_GENERATOR_CONTENT)
+        // C14: mobile coding companion - run/git/review flows around the code editor.
+        installBundledSkill("coding-companion", "1.0.0", CODING_COMPANION_CONTENT)
     }
 
     private fun installBundledSkill(bundledId: String, bundledVersion: String, content: String) {
@@ -1802,6 +1804,43 @@ Do not create extraneous files: README.md, INSTALLATION_GUIDE.md, CHANGELOG.md, 
  * C2: bundled "security-brief" skill. The scheduled morning-brief preset
  * instructs the agent to follow this playbook.
  */
+private val CODING_COMPANION_CONTENT = """
+---
+name: coding-companion
+version: 1.0.0
+description: Mobile coding companion - read and edit code with the user, run it in the sandbox, manage git (clone/commit/push), and review diffs before any commit. Use when the user asks to work on code, run a script, clone a repo, or review changes on device.
+---
+
+# Mobile Coding Companion
+
+Pair with the user on real code, on their phone.
+
+## Editing
+
+- Point the user to the built-in editor for hands-on edits: file browser -> open the
+  file -> Edit. You read and write code with file_read / file_write.
+- Keep edits small and show what changed.
+
+## Run in sandbox
+
+- Run code inside the sandbox shell. First run of a toolchain installs it:
+  `apk add python3`, `apk add nodejs`, etc. If apk fails, say so and stop.
+- Never run anything that deletes data or touches the network beyond what the
+  task needs. Say what a command does before running anything destructive.
+
+## Git
+
+- Install once: `apk add git`. Clone/commit/push only with the user's own account and
+  explicit per-repo confirmation the first time.
+- Never commit secrets, tokens, or credentials - check diffs for them first.
+
+## Review flow
+
+- Before any commit, produce the diff (git diff) and summarize it in the app's UI
+  language: files changed, what each change does, risks. Wait for the user's OK.
+- After pushing, report the commit and where it went.
+"""
+
 private val APP_GENERATOR_CONTENT = """
 ---
 name: app-generator
