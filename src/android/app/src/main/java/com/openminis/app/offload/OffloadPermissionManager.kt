@@ -77,6 +77,10 @@ object OffloadPermissionManager {
         ToolPermissionInfo("sms", "SMS", PermissionCategory.PRIVACY, PermissionLevel.BYPASS),
         ToolPermissionInfo("sms_send", "SMS send", PermissionCategory.PRIVACY, PermissionLevel.ASK_ONCE),
         ToolPermissionInfo("photos", "Photos", PermissionCategory.PRIVACY, PermissionLevel.BYPASS),
+        // A1: health reads (steps/heart rate/sleep) are medical-grade
+        // personal data — default to ASK_ONCE even though the other
+        // privacy tools mirror iOS at BYPASS.
+        ToolPermissionInfo("health", "Health", PermissionCategory.PRIVACY, PermissionLevel.ASK_ONCE),
         // Media — no personal data, hidden from Settings.
         ToolPermissionInfo("speak", "Text-to-Speech", PermissionCategory.MEDIA, PermissionLevel.BYPASS, showInSettings = false),
         ToolPermissionInfo("media_player", "Media Player", PermissionCategory.MEDIA, PermissionLevel.BYPASS, showInSettings = false),

@@ -75,6 +75,10 @@ object DeviceTool {
                     append("android-player ")
                     append(action.removePrefix("player_").ifEmpty { "list" })
                 }
+                "health_status" -> append("android-health status")
+                "health_steps" -> append("android-health steps")
+                "health_heart_rate" -> append("android-health heartrate")
+                "health_sleep" -> append("android-health sleep")
                 "device_info" -> append("android-device info")
                 "device_battery" -> append("android-device battery")
                 "device_storage" -> append("android-device storage")
@@ -129,13 +133,14 @@ object DeviceTool {
                     "notification_settings",
                     "player_play", "player_pause", "player_resume", "player_stop",
                     "player_status", "player_list",
+                    "health_status", "health_steps", "health_heart_rate", "health_sleep",
                     "device_info", "device_battery", "device_storage", "device_all",
                 ),
             ),
             "lat" to AgentToolParam("string", "Latitude for weather_* actions (required for weather)."),
             "lon" to AgentToolParam("string", "Longitude for weather_* actions (required for weather)."),
             "hours" to AgentToolParam("string", "weather_hourly/report: forecast hours (default 24, max 48)."),
-            "days" to AgentToolParam("string", "weather_daily/report: forecast days (default 7, max 10). calendar_list: list events for the next N days."),
+            "days" to AgentToolParam("string", "weather_daily/report: forecast days (default 7, max 10). calendar_list: list events for the next N days. health_steps/heart_rate/sleep: look back N days (max 90)."),
             "today" to AgentToolParam("boolean", "calendar_list: restrict to today."),
             "start" to AgentToolParam("string", "calendar_*: event/range start, ISO 8601 or YYYY-MM-DD."),
             "end" to AgentToolParam("string", "calendar_*: event/range end, ISO 8601 or YYYY-MM-DD."),

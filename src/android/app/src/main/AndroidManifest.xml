@@ -42,6 +42,10 @@
          can be issued without falling through to the broader settings list. -->
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- A1: Health Connect reads (agent health bridge). -->
+    <uses-permission android:name="android.permission.health.READ_STEPS" />
+    <uses-permission android:name="android.permission.health.READ_HEART_RATE" />
+    <uses-permission android:name="android.permission.health.READ_SLEEP" />
     <!-- [T-android-dynamic-island] Android 16 (Baklava) Live Updates: lets the
          ongoing agent-status notification be promoted to the always-visible
          status-chip / "dynamic island" surface. Non-runtime (install-time)
@@ -638,4 +642,9 @@
         </receiver>
 
     </application>
+    <!-- A1: see the Health Connect provider app on pre-Android-14 devices. -->
+    <queries>
+        <package android:name="com.google.android.apps.healthdata" />
+    </queries>
+
 </manifest>

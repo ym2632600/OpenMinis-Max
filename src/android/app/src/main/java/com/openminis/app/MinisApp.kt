@@ -38,6 +38,7 @@ import com.openminis.app.sandbox.PRootKernel
 import com.openminis.app.sandbox.RootfsManager
 import com.openminis.app.sandbox.offload.AccessibilityOffloadHandler
 import com.openminis.app.sandbox.offload.AlarmOffloadHandler
+import com.openminis.app.sandbox.offload.HealthOffloadHandler
 import com.openminis.app.sandbox.offload.BrowserUseOffloadHandler
 import com.openminis.app.sandbox.offload.CalendarOffloadHandler
 import com.openminis.app.sandbox.offload.ClipboardOffloadHandler
@@ -768,6 +769,7 @@ class MinisApp : Application(), ImageLoaderFactory {
         NativeOffloadServer.register("android-contacts", ContactsOffloadHandler(this))
         NativeOffloadServer.register("android-sms", SmsOffloadHandler(this))
         NativeOffloadServer.register("android-device", DeviceOffloadHandler(this))
+        NativeOffloadServer.register("android-health", HealthOffloadHandler(this))
         NativeOffloadServer.register("android-location", LocationOffloadHandler(this))
         NativeOffloadServer.register("android-notification", NotificationOffloadHandler(this))
         NativeOffloadServer.register("android-open", OpenOffloadHandler(this))
