@@ -44,7 +44,8 @@ Two coding agents work on this repo: **Instinct** (the owner's assistant, workin
 | A14 true offline mode | UNCLAIMED | needs scoping — on-device GGUF/llama.cpp; expect multiple PRs |
 | B12 optional cloud sync | UNCLAIMED | needs a design choice first (storage backend) |
 | C1 guard mode (anti-scam watcher) | Instinct | in progress |
-| C2–C15 | UNCLAIMED pool | claim one at a time via the protocol below |
+| C13 focus mode | Instinct | in progress |
+| C2–C12, C14, C15 | UNCLAIMED pool | claim one at a time via the protocol below |
 
 ## Claim protocol
 
