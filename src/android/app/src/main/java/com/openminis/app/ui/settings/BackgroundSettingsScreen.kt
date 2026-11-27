@@ -31,6 +31,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.BatteryFull
 import androidx.compose.material.icons.outlined.Bolt
 import androidx.compose.material.icons.outlined.BatterySaver
+import androidx.compose.material.icons.outlined.ChatBubble
 import androidx.compose.material.icons.outlined.Layers
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
@@ -104,6 +105,7 @@ fun BackgroundSettingsScreen(onBack: () -> Unit) {
     val backgroundRepo = app.backgroundSettingsRepository
     val taskNotificationsEnabled by backgroundRepo.taskNotificationsEnabled.collectAsState()
     val backgroundOverlayEnabled by backgroundRepo.backgroundOverlayEnabled.collectAsState()
+    val bubbleEnabled by backgroundRepo.bubbleEnabled.collectAsState()
     // [T-android-dynamic-island] Live-Updates toggle + device capability.
     val dynamicIslandEnabled by backgroundRepo.dynamicIslandEnabled.collectAsState()
     val scheduledCountdownLead by backgroundRepo.scheduledCountdownLead.collectAsState()
@@ -355,8 +357,40 @@ fun BackgroundSettingsScreen(onBack: () -> Unit) {
                     stringResource(R.string.settings_bg_overlay_footer)
                 },
             )
+        // B5: floating chat bubble. Same overlay-permission flow as the
+        // background overlay above: the switch reflects the persisted
+        // intent, and turning it ON without the grant deep-links to
+        // the system "Display over other apps" screen.
+        Spacer(Modifier.size(8.dp))
+        BgToggleRow(
+            icon = Icons.Outlined.ChatBubble,
+            iconColor = Color(0xFF5856D6),
+            title = stringResource(R.string.settings_bubble),
+            checked = bubbleEnabled,
+            onCheckedChange = { wanted ->
+                if (wanted && !canDrawOverlays) {
+                    try {
+                        val intent = Intent(
+                            Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                            Uri.parse("package:" + context.packageName),
+                        ).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
+                        context.startActivity(intent)
+                    } catch (_: Throwable) {
+                        // Fallback: open generic overlay settings screen.
+                        val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION)
+                            .apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
+                        try { context.startActivity(intent) } catch (_: Throwable) {}
+                    }
+                    // Persist the intent; the bubble turns on once the grant lands.
+                    backgroundRepo.setBubbleEnabled(true)
+                } else {
+                    backgroundRepo.setBubbleEnabled(wanted)
+                }
+            },
+        )
+        BgFooter(stringResource(R.string.settings_bubble_footer))
 
-            // [T-android-dynamic-island] Live Updates / "dynamic island" toggle.
+                        d-dynamic-island] Live Updates / "dynamic island" toggle.
             // Only interactive when the device is capable (Android 16+ with the
             // per-app Live-Updates grant). When ON it REPLACES the floating
             // overlay — the mutual-exclusion guard lives in
