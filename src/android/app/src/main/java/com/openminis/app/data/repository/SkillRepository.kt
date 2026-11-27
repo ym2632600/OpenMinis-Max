@@ -1247,6 +1247,8 @@ class SkillRepository(private val context: Context) {
         installBundledSkill("student-mode", "1.0.0", STUDENT_MODE_CONTENT)
         // C8: natural-language automation - compiles plain-language rules to scheduled tasks.
         installBundledSkill("automation-rules", "1.0.0", AUTOMATION_RULES_CONTENT)
+        // C3: safe pentest lab - guard-scripted, own-network-only security toolkit.
+        installBundledSkill("pentest-lab", "1.0.0", PENTEST_LAB_CONTENT)
     }
 
     private fun installBundledSkill(bundledId: String, bundledVersion: String, content: String) {
@@ -1796,6 +1798,64 @@ Do not create extraneous files: README.md, INSTALLATION_GUIDE.md, CHANGELOG.md, 
  * C2: bundled "security-brief" skill. The scheduled morning-brief preset
  * instructs the agent to follow this playbook.
  */
+private val PENTEST_LAB_CONTENT = """
+---
+name: pentest-lab
+version: 1.0.0
+description: Safe pentest lab - a guarded security toolkit in the shell (nmap and similar) hard-restricted to the user's own network ranges, with a first-run warning and explicit consent. Use when the user asks to scan their own network, check their own devices for open ports, or learn security testing.
+---
+
+# Safe Pentest Lab
+
+Security testing strictly inside the user's own network. Nothing here may ever target
+the public internet, other people's devices, or any address outside the private ranges.
+
+## First run (every install, once)
+
+1. Explain in two short lines (the app's UI language): this lab scans ONLY the user's own
+   network, it exists to check their own devices, and scanning networks you do not own is
+   illegal in most places including Egypt.
+2. Ask for a clear yes. Without it, stop.
+3. Remember the consent in memory so you do not ask again on this device.
+
+## Setup
+
+- Inside the sandbox shell, install the toolkit once: `apk add nmap`
+  (nmap-ncat is included). If apk fails, say so and stop - do not fetch binaries
+  from elsewhere.
+- Install the guard below as ~/bin/safescan (chmod +x) and ALWAYS call it instead of
+  calling nmap directly:
+
+      #!/bin/sh
+      # safescan: nmap wrapper that only allows private/own-network targets.
+      ok=0
+      for a in "\$@"; do
+        case "\$a" in
+          10.*|192.168.*|172.1[6-9].*|172.2[0-9].*|172.3[0-1].*|100.6[4-9].*|100.[7-9][0-9].*|100.1[0-1][0-9].*|127.*|localhost|*.local|fe80::*)
+            ok=1 ;;
+          -*)
+            ;; # flags are fine
+          *)
+            echo "safescan: refusing target '\$a' - only your own network (private ranges) is allowed" >&2
+            exit 2 ;;
+        esac
+      done
+      [ "\$ok" = 1 ] || { echo "safescan: give at least one private-range target" >&2; exit 2; }
+      exec nmap "\$@"
+
+## Rules
+
+- Only ever scan private ranges: 10.0.0.0/8, 172.16.0.0-31, 192.168.0.0/16, 100.64.0.0/10,
+  127.0.0.0/8, link-local, .local names. Everything else is refused by the guard - never
+  bypass, patch, or work around it.
+- Default scan: `safescan -sn <subnet>` to list the user's own devices, then service
+  detection on the user's OWN devices only.
+- No vulnerability exploitation, no password attacks, no DoS flags (-f, -D, --spoof,
+  floods). Discovery and service/version detection only.
+- Summarize findings plainly in the UI language: device, open ports, what each service
+  usually is, and one line on whether anything looks exposed.
+"""
+
 private val AUTOMATION_RULES_CONTENT = """
 ---
 name: automation-rules
