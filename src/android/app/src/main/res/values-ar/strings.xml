@@ -395,6 +395,13 @@
     <string name="code_editor_save">حفظ</string>
     <string name="code_editor_saved">تم الحفظ</string>
     <string name="code_editor_cannot_open">لا يمكن تحرير هذا الملف (كبير جدًا أو غير قابل للقراءة).</string>
+    <string name="sync_section_title">المزامنة الليلية</string>
+    <string name="sync_section_footer">متوقفة افتراضيًا. عند التفعيل، يشغّل Minis نسخة احتياطية مشفّرة لذاكرتك وإعداداتك كل ليلة حوالي الثالثة فجرًا ويسلّمها إلى كل وجهة مفعّلة. استعد على جهازك الآخر بنفس عبارة المرور.</string>
+    <string name="sync_switch_title">مزامنة ليلية مشفّرة</string>
+    <string name="sync_state_on">مفعّلة — التشغيل التالي حوالي 3:00 فجرًا</string>
+    <string name="sync_state_off">متوقفة</string>
+    <string name="sync_passphrase_title">عبارة مرور المزامنة</string>
+    <string name="sync_passphrase_body">تشفّر عبارة المرور هذه كل حزمة مزامنة ليلية من الطرف إلى الطرف. تُخزَّن في التخزين المشفّر المدعوم بـ Keystore على هذا الجهاز. تحتاج نفس عبارة المرور للاستعادة على جهاز آخر.</string>
     <string name="bg_overlay_nudge_body">امنح «العرض فوق التطبيقات الأخرى» ليعرض Minis الأداة الحالية أثناء انتقالك لتطبيق آخر. اضغط لفتح إذن النظام.</string>
     <string name="quicktest_transcript_result">قُلت: «%1$s»\nسُمع: «%2$s»</string>
     <string name="scheduled_detail_of_total"> / %1$d إجمالي</string>

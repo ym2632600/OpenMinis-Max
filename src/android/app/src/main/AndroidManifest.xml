@@ -537,6 +537,17 @@
             android:name=".offload.ScheduledNotificationReceiver"
             android:exported="false" />
 
+        <!-- B12: nightly sync alarm + boot/package-replace re-arm. -->
+        <receiver
+            android:name=".backup.SyncAlarmReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="com.openminis.app.action.NIGHTLY_SYNC" />
+            </intent-filter>
+        </receiver>
+
         <!-- [T-android-scheduled-tasks-design] AlarmManager target for
              user-defined scheduled tasks (Settings → home top-right
              schedule icon). The receiver dispatches to ScheduledAgentRunner

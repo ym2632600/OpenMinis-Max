@@ -677,6 +677,13 @@
     <string name="common_cancel">Cancel</string>
     <string name="common_delete">Delete</string>
     <string name="common_save">Save</string>
+    <string name="sync_section_title">Nightly Sync</string>
+    <string name="sync_section_footer">Off by default. When on, Minis runs an encrypted backup of your memory and settings every night around 3 AM and delivers it to every enabled destination. Restore on your other device with the same passphrase.</string>
+    <string name="sync_switch_title">Encrypted nightly sync</string>
+    <string name="sync_state_on">On — next run around 3:00 AM</string>
+    <string name="sync_state_off">Off</string>
+    <string name="sync_passphrase_title">Sync Passphrase</string>
+    <string name="sync_passphrase_body">This passphrase encrypts every nightly sync package end to end. It is stored in this device's Keystore-backed encrypted storage. You need the same passphrase to restore on another device.</string>
     <string name="common_edit">Edit</string>
     <!-- [T-android-thinking-rules-phase2] Provider-detail Thinking Rules section -->
     <string name="thinking_rules_section">Thinking Rules</string>

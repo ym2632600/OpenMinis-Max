@@ -90,8 +90,10 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.openminis.app.data.DeviceIdentity
 import com.openminis.app.ui.settings.SettingsSwitch
+import com.openminis.app.ui.settings.SettingsSwitchRow
 import com.openminis.app.R
 import com.openminis.app.backup.BackupCategory
+import com.openminis.app.backup.SyncScheduler
 import com.openminis.app.backup.BackupFormat
 import com.openminis.app.backup.BackupHistory
 import com.openminis.app.ui.components.MinisMenu
@@ -514,6 +516,9 @@ private fun BackupTab(
         onToggle = vm::setDestinationEnabled,
     )
 
+    // -- Nightly sync (B12) --
+    SyncSection(enabled = !running)
+
     // -- Action --
     Column(Modifier.padding(16.dp)) {
         // [T-android-backup-stop] ONE button that toggles. While a backup runs
@@ -744,6 +749,96 @@ private fun DeviceNameSection(enabled: Boolean) {
                 },
             )
         }
+    }
+}
+
+
+/**
+ * B12: opt-in nightly sync. Off by default; enabling asks for the passphrase
+ * once, stores it in the Keystore-backed encrypted prefs, and schedules a
+ * daily ~03:00 encrypted backup of the settings-shaped categories to every
+ * enabled destination. Restore on the other device is the existing one-tap
+ * restore flow.
+ */
+@Composable
+private fun SyncSection(enabled: Boolean) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    var syncOn by remember { mutableStateOf(SyncScheduler.isEnabled(context)) }
+    var showPassphraseDialog by remember { mutableStateOf(false) }
+    var dialogPassphrase by remember { mutableStateOf("") }
+    SettingsSection(
+        header = stringResource(R.string.sync_section_title),
+        footer = stringResource(R.string.sync_section_footer),
+    ) {
+        SettingsSwitchRow(
+            title = stringResource(R.string.sync_switch_title),
+            subtitle = stringResource(
+                if (syncOn) R.string.sync_state_on else R.string.sync_state_off,
+            ),
+            checked = syncOn,
+            onCheckedChange = { on ->
+                if (on) {
+                    val stored = SyncScheduler.storedPassphrase(context)
+                    if (!stored.isNullOrEmpty()) {
+                        SyncScheduler.enable(context, stored)
+                        syncOn = true
+                    } else {
+                        showPassphraseDialog = true
+                    }
+                } else {
+                    SyncScheduler.disable(context)
+                    syncOn = false
+                }
+            },
+            enabled = enabled,
+            showDivider = false,
+        )
+    }
+    if (showPassphraseDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                dialogPassphrase = ""
+                showPassphraseDialog = false
+            },
+            title = { Text(stringResource(R.string.sync_passphrase_title)) },
+            text = {
+                Column {
+                    Text(
+                        stringResource(R.string.sync_passphrase_body),
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    OutlinedTextField(
+                        value = dialogPassphrase,
+                        onValueChange = { dialogPassphrase = it },
+                        label = { Text(stringResource(R.string.backup_passphrase)) },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                        visualTransformation = PasswordVisualTransformation(),
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        SyncScheduler.enable(context, dialogPassphrase)
+                        syncOn = true
+                        dialogPassphrase = ""
+                        showPassphraseDialog = false
+                    },
+                    enabled = dialogPassphrase.isNotEmpty(),
+                ) { Text(stringResource(R.string.common_save)) }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        dialogPassphrase = ""
+                        showPassphraseDialog = false
+                    },
+                ) { Text(stringResource(R.string.common_cancel)) }
+            },
+        )
     }
 }
 
