@@ -51,6 +51,7 @@ import com.openminis.app.sandbox.offload.LocationOffloadHandler
 import com.openminis.app.sandbox.offload.ModelUseOffloadHandler
 import com.openminis.app.sandbox.offload.SessionsOffloadHandler
 import com.openminis.app.sandbox.offload.ShizukuOffloadHandler
+import com.openminis.app.sandbox.offload.TermuxOffloadHandler
 import com.openminis.app.sandbox.offload.NotificationOffloadHandler
 import com.openminis.app.sandbox.offload.OpenOffloadHandler
 import com.openminis.app.sandbox.offload.PhotosOffloadHandler
@@ -823,6 +824,11 @@ class MinisApp : Application(), ImageLoaderFactory {
         // can register unconditionally; ShizukuManager.init below wires
         // up the binder lifecycle listeners + StateFlow.
         NativeOffloadServer.register("android-shizuku-cli", ShizukuOffloadHandler(this))
+        // B10: android-termux-cli — run commands in Termux and share files via
+        // the shared folder. The handler short-circuits with a typed error
+        // envelope when Termux is missing or external apps are disallowed, so
+        // registering unconditionally is safe.
+        NativeOffloadServer.register("android-termux-cli", TermuxOffloadHandler(this))
         com.openminis.app.offload.ShizukuManager.init(this)
 
         // T-android-minis-debug-cli: shell-side CLI wrapper around the in-app

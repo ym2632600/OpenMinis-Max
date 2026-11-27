@@ -80,6 +80,10 @@
          ungrantable there; legacy storage is the only path that lets proot
          readdir a mounted external folder. Capped at API 29 — ignored on 11+. -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29" />
+    <!-- B10: Termux integration — lets this app fire Termux's RUN_COMMAND
+         execution service. Declared by Termux with normal protection, so it
+         is granted at install; Termux still requires allow-external-apps=true. -->
+    <uses-permission android:name="com.termux.permission.RUN_COMMAND" />
     <!-- T219: Mount External Folders bind-mounts SAF-picked tree URIs into
          /var/minis/mounts/ via PRoot. PRoot's bind translates `readdir(/var/minis/mounts/X)`
          into a host-side `readdir(/storage/emulated/0/...)` running as the app uid.
@@ -160,6 +164,9 @@
              user has the Shizuku Manager app installed and report accurate state
              in Settings (NOT_INSTALLED vs NOT_RUNNING vs RUNNING_NEED_PERM …). -->
         <package android:name="moe.shizuku.privileged.api" />
+        <!-- B10: Termux — package-visibility entry so android-termux-cli can
+             detect whether Termux is installed on Android 11+. -->
+        <package android:name="com.termux" />
         <!-- [T-android-privileged-backend] AXManager — same package-visibility
              need so PrivilegedBackend can detect/launch it under Android 11+. -->
         <package android:name="frb.axeron.manager" />
