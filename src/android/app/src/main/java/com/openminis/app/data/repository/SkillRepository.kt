@@ -1249,6 +1249,8 @@ class SkillRepository(private val context: Context) {
         installBundledSkill("automation-rules", "1.0.0", AUTOMATION_RULES_CONTENT)
         // C3: safe pentest lab - guard-scripted, own-network-only security toolkit.
         installBundledSkill("pentest-lab", "1.0.0", PENTEST_LAB_CONTENT)
+        // C5: screen-record and explain - recap what happened on screen.
+        installBundledSkill("screen-recap", "1.0.0", SCREEN_RECAP_CONTENT)
     }
 
     private fun installBundledSkill(bundledId: String, bundledVersion: String, content: String) {
@@ -1798,6 +1800,43 @@ Do not create extraneous files: README.md, INSTALLATION_GUIDE.md, CHANGELOG.md, 
  * C2: bundled "security-brief" skill. The scheduled morning-brief preset
  * instructs the agent to follow this playbook.
  */
+private val SCREEN_RECAP_CONTENT = """
+---
+name: screen-recap
+version: 1.0.0
+description: Explain what recently happened on the user's screen and guide the next steps. Use when the user asks "what just happened", "what was that popup/error", "recap my screen", or wants step-by-step guidance on something they were doing.
+---
+
+# Screen Recap
+
+Reconstruct what happened on the user's screen recently, explain it plainly, and guide
+what to do next. Explicit user request only - never run this in the background.
+
+## Gather
+
+1. Recent history: `android-a11y-cli service events --limit 80` - the accessibility
+   event ring (window changes, packages, visible text snippets, timestamps).
+2. Current screen: `android-a11y-cli ui dump` (compact) for what is showing NOW.
+3. Only when a visual detail matters (an icon, an image, a layout): add
+   `android-a11y-cli ui screenshot` and look at it.
+
+If the accessibility service is off, tell the user in one line how to enable it
+(Settings > Accessibility) and stop.
+
+## Explain
+
+- Answer in the app's current UI language (Arabic when the UI is Arabic).
+- Reconstruct a short timeline: which apps were in front, what changed, and any error,
+  dialog, or warning text that appeared - translated into plain words.
+- Say what the current screen is and the single most likely next action, then up to two
+  alternatives. Number the steps to tap when guiding.
+- Never echo sensitive values seen in the history (passwords, OTPs, card numbers,
+  balances). Secure windows do not appear in the ring - if the user asks about one, say
+  it is protected and cannot be read.
+- If the ring is empty or too old to answer, say what you can see now instead of
+  guessing about the past.
+"""
+
 private val PENTEST_LAB_CONTENT = """
 ---
 name: pentest-lab

@@ -79,7 +79,7 @@ Use --compact to emit on a single line; --quiet to strip the envelope.
 
 First-run: enable "Minis" under Settings → Accessibility, then `service ping`.
 """
-        private const val SERVICE_HELP = "service status | ping\n"
+        private const val SERVICE_HELP = "service status | ping | events [--limit N]\n"
         private const val UI_HELP = """ui dump | find | info | node | screenshot
 
   ui screenshot                Capture a system-wide screenshot via
@@ -268,6 +268,24 @@ First-run: enable "Minis" under Settings → Accessibility, then `service ping`.
                     )
                 else
                     NativeOffloadResult(77, "✗ Accessibility service is not running — go to Settings → Accessibility → Minis to enable\n")
+            }
+            "events" -> {
+                // C5: recent accessibility event history (what happened on
+                // screen), newest last, capped by --limit (default 50).
+                val svc = MinisAccessibilityService.getInstance()
+                    ?: return NativeOffloadResult(77, "✗ Accessibility service is not running - go to Settings → Accessibility → Minis to enable\n")
+                val limit = args.getInt("limit")?.coerceIn(1, 200) ?: 50
+                val events = svc.snapshotEvents().takeLast(limit)
+                val arr = JSONArray()
+                for (e in events) {
+                    arr.put(JSONObject()
+                        .put("ts", e.timestamp)
+                        .put("type", e.type)
+                        .put("package", e.packageName)
+                        .put("class", e.className)
+                        .put("text", e.text))
+                }
+                ok(args, JSONObject().put("count", events.size).put("events", arr))
             }
             else -> NativeOffloadResult(2, "$TOOL service: unknown action\n$SERVICE_HELP")
         }
