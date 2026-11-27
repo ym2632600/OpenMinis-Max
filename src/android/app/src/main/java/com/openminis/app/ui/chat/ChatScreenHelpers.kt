@@ -271,25 +271,6 @@ import com.openminis.app.ui.browser.BrowserSheet
 import com.openminis.app.ui.theme.ChatColors
 import com.openminis.app.ui.components.MinisTextButton
 
-/**
- * Create an empty JPEG file under filesDir/camera-photos/ and return a
- * FileProvider content URI for it, plus the underlying File. The camera
- * app writes the captured image into this URI synchronously.
- *
- * Bug 1 (MIUI): the previous version put the staging file under cacheDir,
- * which MIUI may clear while the camera Activity is in flight. Moving to
- * filesDir keeps the URI valid until we explicitly delete it.
- */
-internal fun createCameraOutputUri(context: android.content.Context): Pair<Uri, java.io.File> {
-    val dir = java.io.File(context.filesDir, "camera-photos").also { it.mkdirs() }
-    val ts = System.currentTimeMillis()
-    val file = java.io.File(dir, "photo-$ts.jpg")
-    file.createNewFile()
-    val authority = context.packageName + ".fileprovider"
-    val uri = androidx.core.content.FileProvider.getUriForFile(context, authority, file)
-    return uri to file
-}
-
 internal fun getFileName(context: android.content.Context, uri: Uri): String? {
     val cursor = context.contentResolver.query(uri, null, null, null, null) ?: return null
     return cursor.use {
