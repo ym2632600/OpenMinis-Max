@@ -15,6 +15,9 @@ internal class OffloadArgs(argv: List<String>, booleanFlags: Set<String> = empty
     val positional: List<String>
     private val flags: Set<String>
     private val values: Map<String, String>
+    // A1: repeated flags (e.g. android-intent's --extra-string k=v) keep
+    // every occurrence here; [values] still holds the last one.
+    private val multiValues: Map<String, List<String>>
 
     init {
         // T54: every android-* command supports --compact / -q / --quiet for
@@ -28,6 +31,7 @@ internal class OffloadArgs(argv: List<String>, booleanFlags: Set<String> = empty
         val pos = mutableListOf<String>()
         val fs = mutableSetOf<String>()
         val vs = mutableMapOf<String, String>()
+        val multi = mutableMapOf<String, MutableList<String>>()
         var i = 0
         while (i < argv.size) {
             val a = argv[i]
@@ -35,6 +39,7 @@ internal class OffloadArgs(argv: List<String>, booleanFlags: Set<String> = empty
                 a.startsWith("--") && a.contains('=') -> {
                     val eq = a.indexOf('=')
                     vs[a.substring(2, eq)] = a.substring(eq + 1)
+                    multi.getOrPut(a.substring(2, eq)) { mutableListOf() }.add(a.substring(eq + 1))
                 }
                 a.startsWith("--") -> {
                     val key = a.substring(2)
@@ -48,6 +53,7 @@ internal class OffloadArgs(argv: List<String>, booleanFlags: Set<String> = empty
                         fs.add(key)
                     } else {
                         vs[key] = next
+                        multi.getOrPut(key) { mutableListOf() }.add(next)
                         i++
                     }
                 }
@@ -59,10 +65,14 @@ internal class OffloadArgs(argv: List<String>, booleanFlags: Set<String> = empty
         positional = pos
         flags = fs
         values = vs
+        multiValues = multi
     }
 
     fun hasFlag(vararg names: String): Boolean = names.any { it in flags }
     fun get(vararg names: String): String? = names.firstNotNullOfOrNull { values[it] }
+
+    /** Every occurrence of a repeated flag, in order (empty when absent). */
+    fun getAll(name: String): List<String> = multiValues[name] ?: emptyList()
     fun getInt(vararg names: String): Int? = get(*names)?.toIntOrNull()
     fun getLong(vararg names: String): Long? = get(*names)?.toLongOrNull()
     fun getDouble(vararg names: String): Double? = get(*names)?.toDoubleOrNull()

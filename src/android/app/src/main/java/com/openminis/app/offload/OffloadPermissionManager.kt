@@ -81,6 +81,7 @@ object OffloadPermissionManager {
         // personal data — default to ASK_ONCE even though the other
         // privacy tools mirror iOS at BYPASS.
         ToolPermissionInfo("health", "Health", PermissionCategory.PRIVACY, PermissionLevel.ASK_ONCE),
+        ToolPermissionInfo("bluetooth", "Bluetooth", PermissionCategory.PRIVACY, PermissionLevel.BYPASS),
         // Media — no personal data, hidden from Settings.
         ToolPermissionInfo("speak", "Text-to-Speech", PermissionCategory.MEDIA, PermissionLevel.BYPASS, showInSettings = false),
         ToolPermissionInfo("media_player", "Media Player", PermissionCategory.MEDIA, PermissionLevel.BYPASS, showInSettings = false),
@@ -95,6 +96,9 @@ object OffloadPermissionManager {
         // NOT_ALLOWED until the user picks otherwise even when the
         // underlying system layer (Shizuku binder / Accessibility service)
         // is already authorized.
+        // A1: broadcast intents can drive other apps (Tasker/MacroDroid
+        // tasks) — ask first like SMS send.
+        ToolPermissionInfo("intent", "App broadcasts", PermissionCategory.INTEGRATIONS, PermissionLevel.ASK_ONCE),
         ToolPermissionInfo("a11y_cli", "android-a11y-cli", PermissionCategory.INTEGRATIONS, PermissionLevel.NOT_ALLOWED),
         ToolPermissionInfo("shizuku_cli", "android-shizuku-cli", PermissionCategory.INTEGRATIONS, PermissionLevel.NOT_ALLOWED),
     )

@@ -75,6 +75,20 @@ object DeviceTool {
                     append("android-player ")
                     append(action.removePrefix("player_").ifEmpty { "list" })
                 }
+                "bluetooth_status" -> append("android-bluetooth status")
+                "bluetooth_paired" -> append("android-bluetooth paired")
+                "intent_broadcast" -> {
+                    append("android-intent broadcast")
+                    // NB: the tool's own `action` field holds "intent_broadcast";
+                    // the broadcast's Android action travels in `intent_action`.
+                    opt(args, "intent_action")?.let { append(" --action ${q(it)}") }
+                    opt(args, "package")?.let { append(" --package ${q(it)}") }
+                    opt(args, "extras")?.let { raw ->
+                        runCatching { JSONObject(raw) }.getOrNull()?.let { obj ->
+                            for (k in obj.keys()) append(" --extra-string ${q("$k=${obj.getString(k)}")}")
+                        }
+                    }
+                }
                 "health_status" -> append("android-health status")
                 "health_steps" -> append("android-health steps")
                 "health_heart_rate" -> append("android-health heartrate")
@@ -133,6 +147,7 @@ object DeviceTool {
                     "notification_settings",
                     "player_play", "player_pause", "player_resume", "player_stop",
                     "player_status", "player_list",
+                    "bluetooth_status", "bluetooth_paired", "intent_broadcast",
                     "health_status", "health_steps", "health_heart_rate", "health_sleep",
                     "device_info", "device_battery", "device_storage", "device_all",
                 ),
@@ -160,13 +175,16 @@ object DeviceTool {
             "session" to AgentToolParam("string", "player_*: playback session name (required except player_list)."),
             "path" to AgentToolParam("string", "player_play: media file path (required)."),
             "position_ms" to AgentToolParam("string", "player_resume/seek: position in milliseconds."),
+            "intent_action" to AgentToolParam("string", "intent_broadcast: the Android intent action to broadcast, e.g. net.dinglisch.android.taskerm.ACTION_TASK for a Tasker task (required)."),
+            "package" to AgentToolParam("string", "intent_broadcast: target app package (e.g. net.dinglisch.android.taskerm). Recommended - makes the broadcast explicit."),
+            "extras" to AgentToolParam("string", "intent_broadcast: JSON object of string extras, e.g. {\"task_name\":\"MyTask\"}."),
         ),
         required = listOf("tool_title", "action"),
         propertyOrdering = listOf(
             "tool_title", "action", "lat", "lon", "hours", "days", "today",
             "start", "end", "title", "body", "event_id", "time", "duration",
             "label", "repeat", "after", "at", "max", "key", "message", "id",
-            "session", "path", "position_ms",
+            "session", "path", "position_ms", "intent_action", "package", "extras",
         ),
     )
 }
