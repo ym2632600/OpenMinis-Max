@@ -97,12 +97,15 @@ class BluetoothOffloadHandler(private val context: Context) : NativeOffloadHandl
         }
         return when (result) {
             OffloadPermissionManager.AndroidPermissionResult.GRANTED -> null
-            OffloadPermissionManager.AndroidPermissionResult.DENIED -> NativeOffloadResult(
+            OffloadPermissionManager.AndroidPermissionResult.DENIED,
+            OffloadPermissionManager.AndroidPermissionResult.TIMEOUT,
+            -> NativeOffloadResult(
                 77,
                 OffloadOutput.formatBody(
                     JSONObject()
                         .put("error", "permission_denied")
-                        .put("message", "Bluetooth (Nearby devices) permission not granted. Ask the user to allow it in Settings, then retry."),
+                        .put("message", "Bluetooth (Nearby devices) permission not granted. Ask the user to allow it in Settings, then retry.")
+                        .toString(),
                     args,
                 ) + "\n",
             )
