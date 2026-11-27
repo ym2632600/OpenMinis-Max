@@ -1202,4 +1202,22 @@
     <string name="settings_section_battery">البطارية</string>
     <string name="settings_battery_saver">وضع توفير البطارية</string>
     <string name="settings_battery_saver_footer">يوقف صدفة لينكس الخلفية بعد ١٠ دقائق من الخمول لتقليل استهلاك البطارية والذاكرة. تعمل تلقائيًا فور احتياج الوكيل لها.</string>
+    <!-- C1: guard mode -->
+    <string name="settings_section_guard">وضع الحماية</string>
+    <string name="settings_guard_mode">تحذيرات الاحتيال</string>
+    <string name="settings_guard_mode_footer">يفحص الإشعارات الواردة محليًا على الجهاز بحثًا عن علامات الاحتيال والتصيد ويحذرك بلغة بسيطة. لا يُرفع أي شيء؛ التحليل لا يغادر الهاتف أبدًا.</string>
+    <string name="consent_scope_guard_monitor">مراقبة وضع الحماية</string>
+    <string name="consent_scope_guard_monitor_desc">قراءة محتوى الإشعارات محليًا على الجهاز لاكتشاف أنماط الاحتيال</string>
+    <string name="guard_channel_name">تحذيرات وضع الحماية</string>
+    <string name="guard_channel_description">تحذيرات بشأن إشعارات تبدو كاحتيال أو تصيد</string>
+    <string name="guard_warning_title">اشتباه في احتيال</string>
+    <string name="guard_warning_body">إشعار من %1$s يبدو مشبوهًا:</string>
+    <string name="guard_warning_advice">لا تضغط على روابطه ولا تشارك أي رموز حتى تتحقق منه عبر التطبيق أو الموقع الرسمي.</string>
+    <string name="guard_reason_lookalike">الرابط ينتحل علامة معروفة لكنه ليس موقعها الرسمي</string>
+    <string name="guard_reason_ip_host">الرابط يشير إلى عنوان خادم خام بدلًا من نطاق حقيقي</string>
+    <string name="guard_reason_suspicious_url">الرابط يستخدم عنوانًا مشبوهًا أو مضللًا</string>
+    <string name="guard_reason_shortener">الرابط مخفي خلف خدمة اختصار روابط</string>
+    <string name="guard_reason_credential">يطلب كلمات مرور أو أرقام بطاقات أو رموز تحقق</string>
+    <string name="guard_reason_urgency">يضغط عليك للتصرف فورًا</string>
+    <string name="guard_reason_prize">يعدك بجوائز أو أموال، وهي طُعم احتيال كلاسيكي</string>
 </resources>

@@ -30,6 +30,7 @@ import androidx.compose.material.icons.outlined.BatteryFull
 import androidx.compose.material.icons.outlined.Bolt
 import androidx.compose.material.icons.outlined.BatterySaver
 import androidx.compose.material.icons.outlined.Layers
+import kotlinx.coroutines.launch
 import androidx.compose.material.icons.outlined.NotificationsActive
 import androidx.compose.material.icons.outlined.PhoneAndroid
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -101,6 +102,9 @@ fun BackgroundSettingsScreen(onBack: () -> Unit) {
     val dynamicIslandEnabled by backgroundRepo.dynamicIslandEnabled.collectAsState()
     val scheduledCountdownLead by backgroundRepo.scheduledCountdownLead.collectAsState()
     val batterySaverEnabled by com.openminis.app.power.BatterySaverManager.enabled.collectAsState()
+    val guardModeEnabled by com.openminis.app.guard.GuardModeManager.enabled.collectAsState()
+    val coroutineScope = androidx.compose.runtime.rememberCoroutineScope()
+    val guardConsentTitle = stringResource(R.string.consent_scope_guard_monitor)
 
     var ignoringOptimizations by remember {
         mutableStateOf(PowerOptimizationManager.isIgnoringBatteryOptimizations(context))
@@ -188,6 +192,34 @@ fun BackgroundSettingsScreen(onBack: () -> Unit) {
                 onCheckedChange = { com.openminis.app.power.BatterySaverManager.setEnabled(it) },
             )
             BgFooter(stringResource(R.string.settings_battery_saver_footer))
+
+            // C1: guard mode - local scam/phishing warnings for notifications.
+            Spacer(Modifier.size(8.dp))
+            BgSectionTitle(stringResource(R.string.settings_section_guard))
+            BgToggleRow(
+                icon = Icons.Outlined.Layers,
+                iconColor = Color(0xFFFF9500),
+                title = stringResource(R.string.settings_guard_mode),
+                checked = guardModeEnabled,
+                onCheckedChange = { on ->
+                    if (on) {
+                        coroutineScope.launch {
+                            val outcome = com.openminis.app.consent.ConsentManager.requireConsent(
+                                com.openminis.app.consent.SensitiveScope.GUARD_MONITOR,
+                                guardConsentTitle,
+                            )
+                            if (outcome is com.openminis.app.consent.ConsentManager.ConsentOutcome.Approved ||
+                                outcome is com.openminis.app.consent.ConsentManager.ConsentOutcome.ApprovedAlways
+                            ) {
+                                com.openminis.app.guard.GuardModeManager.setEnabled(true)
+                            }
+                        }
+                    } else {
+                        com.openminis.app.guard.GuardModeManager.setEnabled(false)
+                    }
+                },
+            )
+            BgFooter(stringResource(R.string.settings_guard_mode_footer))
 
             // T-bg-overlay phase 2: floating tool-status overlay toggle.
             // Tapping ON without SYSTEM_ALERT_WINDOW deep-links the user to

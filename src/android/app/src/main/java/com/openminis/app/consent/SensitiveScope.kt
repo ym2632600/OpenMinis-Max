@@ -17,7 +17,8 @@ enum class SensitiveScope(
     MAKE_PURCHASE(R.string.consent_scope_make_purchase, R.string.consent_scope_make_purchase_desc),
     POST_PUBLIC(R.string.consent_scope_post_public, R.string.consent_scope_post_public_desc),
     DELETE_DATA(R.string.consent_scope_delete_data, R.string.consent_scope_delete_data_desc),
-    ACCESSIBILITY_ACTION(R.string.consent_scope_accessibility_action, R.string.consent_scope_accessibility_action_desc);
+    ACCESSIBILITY_ACTION(R.string.consent_scope_accessibility_action, R.string.consent_scope_accessibility_action_desc),
+    GUARD_MONITOR(R.string.consent_scope_guard_monitor, R.string.consent_scope_guard_monitor_desc);
 
     companion object {
         fun fromName(name: String?): SensitiveScope? = values().firstOrNull { it.name == name }

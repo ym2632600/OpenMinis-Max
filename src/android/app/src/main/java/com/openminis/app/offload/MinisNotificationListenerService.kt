@@ -40,6 +40,19 @@ class MinisNotificationListenerService : NotificationListenerService() {
         // until the listener has actually observed its own post.
         val key = postKey(sbn.packageName, sbn.id)
         postedLatches.remove(key)?.countDown()
+        // C1: guard mode - score the notification locally and warn on likely
+        // scams. Runs only when the user explicitly enabled guard mode.
+        try {
+            val extras = sbn.notification?.extras
+            val title = extras?.getCharSequence("android.title")?.toString()
+            val text = (
+                extras?.getCharSequence("android.bigText")
+                    ?: extras?.getCharSequence("android.text")
+                )?.toString()
+            com.openminis.app.guard.GuardModeManager.inspect(sbn.packageName, title, text)
+        } catch (t: Throwable) {
+            AppLogger.warning(TAG, "guard inspect failed: ${t.message}")
+        }
     }
 
     override fun onNotificationRemoved(sbn: StatusBarNotification) {}

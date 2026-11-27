@@ -2865,4 +2865,22 @@
     <string name="settings_section_battery">Battery</string>
     <string name="settings_battery_saver">Battery saver</string>
     <string name="settings_battery_saver_footer">Suspends the background Linux shell after 10 idle minutes to cut battery and RAM use. It restarts automatically the moment the agent needs it.</string>
+    <!-- C1: guard mode -->
+    <string name="settings_section_guard">Guard mode</string>
+    <string name="settings_guard_mode">Scam warnings</string>
+    <string name="settings_guard_mode_footer">Checks incoming notifications on-device for scam and phishing signs and warns you in plain language. Nothing is uploaded; analysis never leaves the phone.</string>
+    <string name="consent_scope_guard_monitor">Guard mode monitoring</string>
+    <string name="consent_scope_guard_monitor_desc">Read notification content on-device to detect scam patterns</string>
+    <string name="guard_channel_name">Guard mode warnings</string>
+    <string name="guard_channel_description">Warnings about notifications that look like scams or phishing</string>
+    <string name="guard_warning_title">Possible scam detected</string>
+    <string name="guard_warning_body">A notification from %1$s looks suspicious:</string>
+    <string name="guard_warning_advice">Do not tap its links or share any codes until you verify it with the official app or website.</string>
+    <string name="guard_reason_lookalike">The link imitates a known brand but is not its official site</string>
+    <string name="guard_reason_ip_host">The link points to a raw server address instead of a real domain</string>
+    <string name="guard_reason_suspicious_url">The link uses a suspicious or deceptive address</string>
+    <string name="guard_reason_shortener">The link is hidden behind a URL shortener</string>
+    <string name="guard_reason_credential">It asks for passwords, card numbers or verification codes</string>
+    <string name="guard_reason_urgency">It pressures you to act immediately</string>
+    <string name="guard_reason_prize">It promises prizes or money, a classic scam hook</string>
 </resources>
