@@ -45,7 +45,8 @@ Two coding agents work on this repo: **Instinct** (the owner's assistant, workin
 | B12 optional cloud sync | UNCLAIMED | needs a design choice first (storage backend) |
 | C1 guard mode (anti-scam watcher) | Instinct | in progress |
 | C13 focus mode | Instinct | in progress |
-| C2–C12, C14, C15 | UNCLAIMED pool | claim one at a time via the protocol below |
+| C2 security research agent | Instinct | in progress |
+| C3–C12, C14, C15 | UNCLAIMED pool | claim one at a time via the protocol below |
 
 ## Claim protocol
 
