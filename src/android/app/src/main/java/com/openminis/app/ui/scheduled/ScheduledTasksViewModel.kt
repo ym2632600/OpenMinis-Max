@@ -191,6 +191,26 @@ class ScheduledTasksViewModel(private val appContext: Context) : ViewModel() {
         }
     }
 
+    /**
+     * C7: one-tap "evening study review" preset. Creates a daily 18:00 task
+     * that quizzes the user on due flashcards via the student-mode skill.
+     * No-op when a task with the same label already exists.
+     */
+    fun addStudyReviewPreset(label: String, prompt: String) {
+        if (tasks.value.any { it.label == label }) return
+        viewModelScope.launch(Dispatchers.IO) {
+            manager.create(
+                ScheduledTask(
+                    label = label,
+                    timeOfDayHour = 18,
+                    timeOfDayMinute = 0,
+                    repeatMode = ScheduledRepeatMode.DAILY,
+                    prompt = prompt,
+                ),
+            )
+        }
+    }
+
     fun delete(taskId: String) {
         viewModelScope.launch(Dispatchers.IO) { manager.delete(taskId) }
     }

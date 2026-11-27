@@ -2904,6 +2904,8 @@
     <string name="security_brief_task_label">Morning security brief</string>
     <string name="scheduled_tasks_add_job_hunt">Add daily job hunt</string>
     <string name="job_hunt_task_label">Daily job hunt</string>
+    <string name="scheduled_tasks_add_study_review">Add evening study review</string>
+    <string name="study_review_task_label">Evening study review</string>
     <!-- C10: mini finance agent -->
     <string name="finance_title">Expense tracker</string>
     <string name="settings_finance_subtitle">Expenses and income parsed from bank and wallet notifications</string>

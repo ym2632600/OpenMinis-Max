@@ -1243,6 +1243,8 @@ class SkillRepository(private val context: Context) {
         installBundledSkill("explain-screen", "1.0.0", EXPLAIN_SCREEN_CONTENT)
         // C9: job-hunt assistant - the weekly job-hunt preset drives it.
         installBundledSkill("job-hunt", "1.0.0", JOB_HUNT_CONTENT)
+        // C7: student mode - lecture summaries, quizzes, spaced-repetition flashcards.
+        installBundledSkill("student-mode", "1.0.0", STUDENT_MODE_CONTENT)
     }
 
     private fun installBundledSkill(bundledId: String, bundledVersion: String, content: String) {
@@ -1792,6 +1794,54 @@ Do not create extraneous files: README.md, INSTALLATION_GUIDE.md, CHANGELOG.md, 
  * C2: bundled "security-brief" skill. The scheduled morning-brief preset
  * instructs the agent to follow this playbook.
  */
+private val STUDENT_MODE_CONTENT = """
+---
+name: student-mode
+version: 1.0.0
+description: Student mode - summarize lectures (files, slides, or pasted text), generate quiz questions, maintain spaced-repetition flashcards, and track study sessions. Use when the user shares study material, asks for a summary or quiz, or asks to review flashcards.
+---
+
+# Student Mode
+
+Help the user study: summarize material, quiz them, and keep flashcards fresh.
+
+## Summarize
+
+- Work from whatever the user shares: an attached file (read it with file_read), pasted
+  text, or a topic they name. Never invent lecture content.
+- Output: a summary in the app's UI language (Arabic when the UI is Arabic), structured
+  as: main ideas (at most 7 bullets), key terms with one-line definitions, and a
+  "likely exam questions" list of 3-5 questions.
+- Keep it short enough to review in five minutes; offer to expand any section.
+
+## Flashcards (spaced repetition)
+
+- Store flashcards as Markdown in the study/ folder, one file per subject, e.g.
+  study/biology.md. Card format:
+
+      ## Q: <question>
+      A: <answer>
+      due: YYYY-MM-DD
+
+- New cards start with today's date as due. After a review: answered easily -> due in
+  7 days, then 14; hesitated -> 3 days; wrong -> tomorrow. Update the due: line in the
+  file with file_write after every review.
+- When the user asks to study or the daily review task runs: read every study/*.md file,
+  list the cards whose due date is today or earlier, and quiz them one at a time, waiting
+  for the user's answer before revealing the card's answer.
+
+## Quizzes
+
+- Generate quizzes from the material or from existing flashcards: 5 questions, mixed
+  recall and understanding, in the UI language. Ask one question at a time, grade each
+  answer in one line, end with a score and the topics to revisit.
+
+## Study sessions
+
+- When the user says they are starting or finishing a study session, note it in memory
+  (subject, duration) so weekly reviews can say what was studied.
+"""
+
 private val JOB_HUNT_CONTENT = """
 ---
 name: job-hunt

@@ -121,6 +121,17 @@ fun ScheduledTasksScreen(
                             expanded = showMenu,
                             onDismissRequest = { showMenu = false },
                         ) {
+                            // C7: one-tap evening study-review preset.
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.scheduled_tasks_add_study_review)) },
+                                onClick = {
+                                    showMenu = false
+                                    vm.addStudyReviewPreset(
+                                        label = context.getString(R.string.study_review_task_label),
+                                        prompt = STUDY_REVIEW_TASK_PROMPT,
+                                    )
+                                },
+                            )
                             // C9: one-tap daily job-hunt preset.
                             DropdownMenuItem(
                                 text = { Text(stringResource(R.string.scheduled_tasks_add_job_hunt)) },
@@ -386,6 +397,17 @@ private fun dowShort(dow: Int): String = when (dow) {
  * C9: prompt for the daily job-hunt scheduled task. English on purpose
  * (model instructions); the skill directs the reply language.
  */
+/**
+ * C7: prompt for the evening study-review scheduled task. English on
+ * purpose (model instructions); the skill directs the reply language.
+ */
+private const val STUDY_REVIEW_TASK_PROMPT =
+    "You are the user's study coach. Follow the student-mode skill exactly: " +
+    "read the flashcards in the study/ folder, quiz the user on every card due today " +
+    "or earlier (one at a time, wait for each answer), update due dates after grading, " +
+    "and finish with a two-line progress note in the app's UI language. " +
+    "If no cards are due, say so in one line and stop."
+
 private const val JOB_HUNT_TASK_PROMPT =
     "You are the user's job-hunt assistant. Follow the job-hunt skill exactly: " +
     "pull new remote job postings from the last 7 days (Remotive, Arbeitnow, RemoteOK), " +

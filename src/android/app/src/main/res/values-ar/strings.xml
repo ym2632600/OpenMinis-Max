@@ -1241,6 +1241,8 @@
     <string name="security_brief_task_label">الموجز الأمني الصباحي</string>
     <string name="scheduled_tasks_add_job_hunt">إضافة البحث اليومي عن وظائف</string>
     <string name="job_hunt_task_label">البحث اليومي عن وظائف</string>
+    <string name="scheduled_tasks_add_study_review">إضافة مراجعة المذاكرة المسائية</string>
+    <string name="study_review_task_label">مراجعة المذاكرة المسائية</string>
     <!-- C10: mini finance agent -->
     <string name="finance_title">متتبع المصاريف</string>
     <string name="settings_finance_subtitle">مصاريفك ودخلك من إشعارات البنك والمحافظ</string>
