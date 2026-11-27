@@ -14253,6 +14253,25 @@ class ChatViewModel(
                         false,
                     )
                 }
+            // A1: device bridge - translate the structured `device` call into
+            // the equivalent android-* offload command and run it through the
+            // shell path, so OffloadGate permission gating is identical.
+            com.openminis.app.tools.DeviceTool.NAME -> {
+                val command = com.openminis.app.tools.DeviceTool.buildCommand(argsJson)
+                if (command == null) {
+                    ToolExecutionResult(
+                        "Invalid device call. Check action and required args " +
+                            "(e.g. weather needs lat/lon, calendar_create needs title+start).",
+                        false,
+                    )
+                } else {
+                    val shellArgs = JSONObject()
+                        .put("tool_title", toolTitle)
+                        .put("command", command)
+                        .toString()
+                    executeShellCommand(shellArgs, toolId, toolBlocks, assistantId, currentText)
+                }
+            }
             "memory_get" -> executeMemoryGetTool(argsJson)
             // [T-port-user-ask] Card in the chat, then wait for the user.
             // [T-user-ask-exposure-guard] A run that does not offer the tool (the

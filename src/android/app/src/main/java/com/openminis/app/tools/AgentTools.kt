@@ -66,6 +66,9 @@ object AgentTools {
         if (!isHelper && delegateEnabled) {
             add(subAgentTaskDefinition(rosterNames))
         }
+        // A1: device bridge - weather/calendar/alarms/notifications/player/info
+        // as a first-class tool; dispatches to the same android-* offload CLIs.
+        add(DeviceTool.definition())
         if (userAskExposed && !isHelper) add(com.openminis.app.agent.userask.UserAskPromptText.definition())
     }
 
