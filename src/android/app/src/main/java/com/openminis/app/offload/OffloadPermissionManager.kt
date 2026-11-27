@@ -76,7 +76,9 @@ object OffloadPermissionManager {
         // ASK_ONCE so the agent can never fire an outgoing text silently.
         ToolPermissionInfo("sms", "SMS", PermissionCategory.PRIVACY, PermissionLevel.BYPASS),
         ToolPermissionInfo("sms_send", "SMS send", PermissionCategory.PRIVACY, PermissionLevel.ASK_ONCE),
+        ToolPermissionInfo("call", "Call", PermissionCategory.PRIVACY, PermissionLevel.ASK_ONCE),
         ToolPermissionInfo("photos", "Photos", PermissionCategory.PRIVACY, PermissionLevel.BYPASS),
+        ToolPermissionInfo("camera", "Camera", PermissionCategory.PRIVACY, PermissionLevel.BYPASS),
         // A1: health reads (steps/heart rate/sleep) are medical-grade
         // personal data — default to ASK_ONCE even though the other
         // privacy tools mirror iOS at BYPASS.
