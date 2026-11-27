@@ -36,8 +36,8 @@ android {
         applicationId = "com.openminis.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = 37
-        versionName = "1.15"
+        versionCode = 38
+        versionName = "1.16"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -63,7 +63,7 @@ android {
         // prerelease flag and cut a tag at its first '-') see them as version
         // 0 and never offer them. UPDATE_CHANNEL is the channel a fresh
         // install starts on; the user can switch to beta in About.
-        buildConfigField("String", "RELEASE_REPO", "\"OpenMinis/OpenMinis\"")
+        buildConfigField("String", "RELEASE_REPO", "\"ym2632600/OpenMinis-Max\"")
         buildConfigField("String", "UPDATE_CHANNEL", "\"stable\"")
 
         ndk {
@@ -82,6 +82,23 @@ android {
         cmake {
             path = file("src/main/cpp/CMakeLists.txt")
             version = "3.22.1"
+        }
+    }
+
+    signingConfigs {
+        // CI-stable signing: when the workflows materialize the release
+        // keystore (from repo secrets) and export MINIS_SIGNING_*, every
+        // build type signs with it, so CI builds install in place over each
+        // other and in-app updates keep working. Locally (no env) this stays
+        // the stock auto-generated debug key, exactly as before.
+        getByName("debug") {
+            val ksFile = System.getenv("MINIS_SIGNING_KEYSTORE")
+            if (!ksFile.isNullOrBlank()) {
+                storeFile = file(ksFile)
+                storePassword = System.getenv("MINIS_SIGNING_STORE_PASSWORD")
+                keyAlias = System.getenv("MINIS_SIGNING_KEY_ALIAS")
+                keyPassword = System.getenv("MINIS_SIGNING_KEY_PASSWORD")
+            }
         }
     }
 
