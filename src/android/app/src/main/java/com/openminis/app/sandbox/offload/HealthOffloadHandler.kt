@@ -2,6 +2,7 @@ package com.openminis.app.sandbox.offload
 
 import android.content.Context
 import com.openminis.app.offload.HealthManager
+import com.openminis.app.sandbox.NativeOffloadHandler
 import com.openminis.app.sandbox.NativeOffloadRequest
 import com.openminis.app.sandbox.NativeOffloadResult
 import kotlinx.coroutines.runBlocking
