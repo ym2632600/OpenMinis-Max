@@ -186,6 +186,9 @@ object ExecutionCoordinator {
     /** Thread-safe per-session mutex registry. */
     private val mutexes = ConcurrentHashMap<String, Mutex>()
 
+    /** [A4] Last command dispatch per shell key, for the battery-saver reaper. */
+    private val lastActivityAt = ConcurrentHashMap<String, Long>()
+
     /**
      * [T-android-a11y-helper-mount] dispatch session id -> the session whose
      * `/var/minis` directories its shell binds (fsSessionId), recorded only
@@ -543,6 +546,7 @@ object ExecutionCoordinator {
             val existing = shells[key]
             val shell = if (existing != null && existing.isAlive) existing
             else getOrCreateShell(key, fsSessionId, chatSessionId = sessionId)
+            lastActivityAt[key] = System.currentTimeMillis()
             return ShellLease(key, shell, mutex)
         }
         // Pool exhausted: every slot is genuinely busy. Wait for slot 0 — the
@@ -553,7 +557,31 @@ object ExecutionCoordinator {
         val existing = shells[key]
         val shell = if (existing != null && existing.isAlive) existing
         else getOrCreateShell(key, fsSessionId, chatSessionId = sessionId)
+        lastActivityAt[key] = System.currentTimeMillis()
         return ShellLease(key, shell, mutex)
+    }
+
+    /**
+     * [A4] Battery saver: stop warm shells idle for longer than [idleMs].
+     * A slot whose mutex is locked is mid-command and is never touched; the
+     * next command transparently respawns the shell via [getOrCreateShell].
+     * Returns the number of shells stopped.
+     */
+    fun reapIdleShells(idleMs: Long): Int {
+        val now = System.currentTimeMillis()
+        var reaped = 0
+        for ((key, shell) in shells) {
+            val last = lastActivityAt[key] ?: now
+            if (now - last < idleMs) continue
+            if (mutexes[key]?.isLocked == true) continue
+            if (shells.remove(key, shell)) {
+                lastActivityAt.remove(key)
+                runCatching { shell.stop() }
+                reaped++
+                android.util.Log.i(TAG, "[battery-saver] reaped idle shell $key")
+            }
+        }
+        return reaped
     }
 
     /**

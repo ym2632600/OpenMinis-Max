@@ -270,6 +270,8 @@ class MinisApp : Application(), ImageLoaderFactory {
         com.openminis.app.usage.UsageCapManager.init(this)
         // A15: persisted skill approvals for the source-risk warning.
         com.openminis.app.data.repository.SkillTrustStore.init(this)
+        // A4: battery-saver watchdog (active only when the user enabled it).
+        com.openminis.app.power.BatterySaverManager.init(this)
         // [T-android-tls-trust-error] Localized text for a rejected certificate;
         // LLMError has no Context of its own.
         com.openminis.app.data.model.CertificateErrorText.resolver = { kind, host ->

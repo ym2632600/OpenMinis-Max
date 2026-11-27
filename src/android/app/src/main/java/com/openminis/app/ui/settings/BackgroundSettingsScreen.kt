@@ -28,6 +28,7 @@ import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.BatteryFull
 import androidx.compose.material.icons.outlined.Bolt
+import androidx.compose.material.icons.outlined.BatterySaver
 import androidx.compose.material.icons.outlined.Layers
 import androidx.compose.material.icons.outlined.NotificationsActive
 import androidx.compose.material.icons.outlined.PhoneAndroid
@@ -99,6 +100,7 @@ fun BackgroundSettingsScreen(onBack: () -> Unit) {
     // [T-android-dynamic-island] Live-Updates toggle + device capability.
     val dynamicIslandEnabled by backgroundRepo.dynamicIslandEnabled.collectAsState()
     val scheduledCountdownLead by backgroundRepo.scheduledCountdownLead.collectAsState()
+    val batterySaverEnabled by com.openminis.app.power.BatterySaverManager.enabled.collectAsState()
 
     var ignoringOptimizations by remember {
         mutableStateOf(PowerOptimizationManager.isIgnoringBatteryOptimizations(context))
@@ -174,6 +176,18 @@ fun BackgroundSettingsScreen(onBack: () -> Unit) {
                 onCheckedChange = { backgroundRepo.setTaskNotificationsEnabled(it) },
             )
             BgFooter(stringResource(R.string.settings_task_notifications_footer))
+
+            // A4: battery-saver mode - idle background shells are suspended.
+            Spacer(Modifier.size(8.dp))
+            BgSectionTitle(stringResource(R.string.settings_section_battery))
+            BgToggleRow(
+                icon = Icons.Outlined.BatterySaver,
+                iconColor = Color(0xFF34C759),
+                title = stringResource(R.string.settings_battery_saver),
+                checked = batterySaverEnabled,
+                onCheckedChange = { com.openminis.app.power.BatterySaverManager.setEnabled(it) },
+            )
+            BgFooter(stringResource(R.string.settings_battery_saver_footer))
 
             // T-bg-overlay phase 2: floating tool-status overlay toggle.
             // Tapping ON without SYSTEM_ALERT_WINDOW deep-links the user to

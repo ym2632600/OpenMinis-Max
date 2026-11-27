@@ -2861,4 +2861,8 @@
     <string name="skill_warning_deny">Cancel</string>
     <string name="consent_reply_title">Reply to %1$s (%2$s)</string>
     <string name="activity_log_reply_sent">Reply sent via %1$s</string>
+    <!-- A4: battery saver -->
+    <string name="settings_section_battery">Battery</string>
+    <string name="settings_battery_saver">Battery saver</string>
+    <string name="settings_battery_saver_footer">Suspends the background Linux shell after 10 idle minutes to cut battery and RAM use. It restarts automatically the moment the agent needs it.</string>
 </resources>

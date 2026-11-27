@@ -1198,4 +1198,8 @@
     <string name="skill_warning_deny">إلغاء</string>
     <string name="consent_reply_title">الرد على %1$s (%2$s)</string>
     <string name="activity_log_reply_sent">أُرسل رد عبر %1$s</string>
+    <!-- A4: battery saver -->
+    <string name="settings_section_battery">البطارية</string>
+    <string name="settings_battery_saver">وضع توفير البطارية</string>
+    <string name="settings_battery_saver_footer">يوقف صدفة لينكس الخلفية بعد ١٠ دقائق من الخمول لتقليل استهلاك البطارية والذاكرة. تعمل تلقائيًا فور احتياج الوكيل لها.</string>
 </resources>
