@@ -76,6 +76,11 @@
     <string name="mic_permission_message">الإدخال الصوتي يحتاج إذن الميكروفون. اضغط فتح الإعدادات للسماح به لـ Minis.</string>
     <string name="mic_permission_open_settings">فتح الإعدادات</string>
     <string name="mic_permission_cancel">إلغاء</string>
+    <!-- B8: Camera permission settings-gate dialog (shown when CAMERA is permanently denied) -->
+    <string name="camera_permission_title">إذن الكاميرا مطلوب</string>
+    <string name="camera_permission_message">يحتاج Minis إذن الكاميرا لالتقاط الصور. اضغط فتح الإعدادات للسماح به لـ Minis.</string>
+    <string name="camera_permission_open_settings">فتح الإعدادات</string>
+    <string name="camera_permission_cancel">إلغاء</string>
     <string name="bg_section_header">الخلفية والإشعارات</string>
     <string name="bg_section_subtitle">تحسين البطارية والتشغيل التلقائي لدى الشركات</string>
     <string name="bg_section_footer">مهام الوكيل الطويلة تحتاج إذنًا لإبقاء المعالج مستيقظًا أثناء إطفاء الشاشة. بدون هذه الإعدادات قد يوقف النظام الاستدلال بعد دقائق في الخلفية.</string>
