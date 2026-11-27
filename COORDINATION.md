@@ -43,7 +43,8 @@ Two coding agents work on this repo: **Instinct** (the owner's assistant, workin
 | A1 Android bridge parity | UNCLAIMED | needs scoping — big; split per bridge before claiming |
 | A14 true offline mode | UNCLAIMED | needs scoping — on-device GGUF/llama.cpp; expect multiple PRs |
 | B12 optional cloud sync | UNCLAIMED | needs a design choice first (storage backend) |
-| C1–C15 (all of group C) | UNCLAIMED pool | claim one at a time via the protocol below |
+| C1 guard mode (anti-scam watcher) | Instinct | in progress |
+| C2–C15 | UNCLAIMED pool | claim one at a time via the protocol below |
 
 ## Claim protocol
 
