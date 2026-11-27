@@ -1255,6 +1255,9 @@ class SkillRepository(private val context: Context) {
         installBundledSkill("app-generator", "1.0.0", APP_GENERATOR_CONTENT)
         // C14: mobile coding companion - run/git/review flows around the code editor.
         installBundledSkill("coding-companion", "1.0.0", CODING_COMPANION_CONTENT)
+        // A14: offline mode - run a small local model in the sandbox (Ollama)
+        // and point an OpenAI-compatible provider at it.
+        installBundledSkill("offline-mode", "1.0.0", OFFLINE_MODE_CONTENT)
     }
 
     private fun installBundledSkill(bundledId: String, bundledVersion: String, content: String) {
@@ -1839,6 +1842,64 @@ Pair with the user on real code, on their phone.
 - Before any commit, produce the diff (git diff) and summarize it in the app's UI
   language: files changed, what each change does, risks. Wait for the user's OK.
 - After pushing, report the commit and where it went.
+"""
+
+private val OFFLINE_MODE_CONTENT = """
+---
+name: offline-mode
+version: 1.0.0
+description: True offline mode - install a small local model server (Ollama) inside the app's Linux sandbox and add it as an OpenAI-compatible provider, so core chat keeps working with no internet. Use when the user asks for offline use, a local model, or on-device AI.
+---
+
+# Offline Mode (On-Device Local Model)
+
+Core chat without internet, by running a small model inside the sandbox and
+pointing a provider at localhost. Degrades gracefully: if any step fails, say
+exactly what failed and stop - never leave a half-configured provider.
+
+## 1. Check the device can carry it
+
+- RAM: `grep MemTotal /proc/meminfo`. Under 4 GB total, warn the user that a
+  local model will be slow and only the smallest models fit.
+- Storage: `df -h .` - need at least 2 GB free for a small model.
+- Architecture: `uname -m` - aarch64 or x86_64 decides the download below.
+
+## 2. Install Ollama in the sandbox
+
+1. Try the package manager first: `apk add ollama`. If the package exists, done.
+2. Otherwise download the official static build for the architecture:
+   - aarch64: https://github.com/ollama/ollama/releases/latest/download/ollama-linux-arm64.tgz
+   - x86_64: https://github.com/ollama/ollama/releases/latest/download/ollama-linux-amd64.tgz
+   Extract to `~/ollama` (`mkdir -p ~/ollama && tar -xzf ollama-linux-*.tgz -C ~/ollama`).
+3. If the binary fails with "not found" or loader errors under the sandbox,
+   install compatibility libs: `apk add gcompat libc6-compat`, then retry.
+4. Verify: `ollama --version` (or `~/ollama/bin/ollama --version`).
+
+## 3. Start the server and pull a small model
+
+- Start in the background: `nohup ollama serve > ~/ollama.log 2>&1 &`
+  then poll until http://127.0.0.1:11434 answers (`ollama list` works).
+- Pull the smallest model that fits: `ollama pull qwen2.5:0.5b` (~400 MB,
+  handles Arabic passably). For very low RAM: `ollama pull smollm2:135m`.
+- Test once: `ollama run <model> "say hello in Arabic"`.
+
+## 4. Wire it into Minis
+
+Tell the user, in their UI language, to do this once (you cannot tap settings):
+1. Settings -> Providers -> add an OpenAI-compatible provider.
+2. Base URL: http://127.0.0.1:11434/v1 - API key: any non-empty text (e.g. "ollama").
+3. Name it "Offline" so it is clearly labeled. Refresh the model list and pick
+   the pulled model for the session.
+
+## 5. Keeping it alive and honest degradation
+
+- The server stops when the app process dies. If offline chat stops
+  responding, re-run the start command from step 3, or ask the agent to.
+- With no internet, everything except the Offline provider fails - that is
+  expected, not a bug. Tell the user plainly when a tool (web, cloud models)
+  cannot work offline.
+- Small local models are much weaker than cloud models and slower on a phone.
+  Say so up front; offer them for drafts, notes and shell-agent tasks.
 """
 
 private val APP_GENERATOR_CONTENT = """
