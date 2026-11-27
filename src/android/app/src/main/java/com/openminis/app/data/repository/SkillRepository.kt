@@ -1245,6 +1245,8 @@ class SkillRepository(private val context: Context) {
         installBundledSkill("job-hunt", "1.0.0", JOB_HUNT_CONTENT)
         // C7: student mode - lecture summaries, quizzes, spaced-repetition flashcards.
         installBundledSkill("student-mode", "1.0.0", STUDENT_MODE_CONTENT)
+        // C8: natural-language automation - compiles plain-language rules to scheduled tasks.
+        installBundledSkill("automation-rules", "1.0.0", AUTOMATION_RULES_CONTENT)
     }
 
     private fun installBundledSkill(bundledId: String, bundledVersion: String, content: String) {
@@ -1794,6 +1796,45 @@ Do not create extraneous files: README.md, INSTALLATION_GUIDE.md, CHANGELOG.md, 
  * C2: bundled "security-brief" skill. The scheduled morning-brief preset
  * instructs the agent to follow this playbook.
  */
+private val AUTOMATION_RULES_CONTENT = """
+---
+name: automation-rules
+version: 1.0.0
+description: Turn plain-language automation rules ("at 11pm enable DND", "every morning summarize my notifications", "if battery is low tell me to charge") into reliable scheduled tasks using device events and tools. Use when the user asks to automate a routine, set a recurring device action, or manage their automation rules.
+---
+
+# Natural-Language Automation
+
+Compile the user's plain-language rule into one or more scheduled tasks, confirm the
+compiled form back to the user, and keep a readable list of active rules.
+
+## Compiling a rule
+
+- Time-based rules ("at 11pm ...", "every Friday at 9am") become a single scheduled task
+  with that time and a prompt describing the action in one sentence.
+- Condition-based rules ("if battery < 20 ...", "when I get an email from X") become a
+  recurring task at the smallest sensible interval (hourly unless the user asks otherwise)
+  whose prompt checks the condition first and stops quietly when it is not met. Say in one
+  line that the check runs hourly so the user knows the rhythm.
+- Rules that need a consent-gated action (sending messages, purchases, deleting data) must
+  keep the approval step inside the task prompt: the action still asks the user. Say this
+  when compiling such a rule.
+
+## Confirming
+
+- After creating or changing a rule, reply with the compiled form: trigger, what runs,
+  and how often. One rule, one confirmation - do not recap old rules.
+- Never silently drop part of a rule: if a part cannot be automated on-device, say which
+  part and what the closest supported version is.
+
+## Managing rules
+
+- Keep the mapping rule -> task label in memory so "turn off the 11pm rule" finds and
+  disables the right scheduled task without guessing.
+- When the user asks what automations they have, list them as trigger + action pairs in
+  the app's UI language.
+"""
+
 private val STUDENT_MODE_CONTENT = """
 ---
 name: student-mode
