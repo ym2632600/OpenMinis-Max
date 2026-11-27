@@ -2824,6 +2824,7 @@
     <string name="consent_allow_always">Always allow</string>
     <string name="consent_deny">Deny</string>
     <string name="consent_sms_title">Send an SMS to %1$s</string>
+    <string name="consent_call_title">Place a call to %1$s</string>
     <string name="consent_settings_title">Consent &amp; approvals</string>
     <string name="settings_consent_subtitle">What the agent may do without asking each time</string>
     <string name="consent_settings_note">Before a sensitive action, the agent shows exactly what it will do and waits for your approval. Anything set to \"Always allow\" can be revoked here at any time.</string>
@@ -2831,6 +2832,8 @@
     <string name="consent_state_ask">Asks every time</string>
     <string name="consent_scope_send_sms">Send SMS</string>
     <string name="consent_scope_send_sms_desc">Text messages sent from your number</string>
+    <string name="consent_scope_place_call">Place phone calls</string>
+    <string name="consent_scope_place_call_desc">Minis can place phone calls on your behalf.</string>
     <string name="consent_scope_send_message">Send messages</string>
     <string name="consent_scope_send_message_desc">Messages sent in other apps on your behalf</string>
     <string name="consent_scope_make_purchase">Purchases &amp; payments</string>
