@@ -5414,6 +5414,8 @@ fun ChatScreen(
                         onReadFromStart = if (isStreaming) null else {
                             { fullText -> selectionReader.speak(fullText) }
                         },
+                        // C12: translate the selection inline in this chat.
+                        onTranslate = { snippet -> viewModel.sendTranslationRequest(snippet) },
                         // [T-multi-select-share] Last item of the selection bar.
                         onShareChat = { messageId -> openSharePicker(messageId) },
                     ),

@@ -1357,6 +1357,7 @@
     <!-- T-android-readaloud-selection-vs-reply — the pair mirrors iOS's
          "Read Selection" / "Read from Start". Bare "Read Aloud" was ambiguous
          once a whole-reply action sat beside it. -->
+    <string name="selection_translate">Translate</string>
     <string name="selection_read_aloud">Read Selection</string>
     <string name="selection_read_from_start">Read from Start</string>
     <!-- Parent of the two above when both apply; plain wording is correct for

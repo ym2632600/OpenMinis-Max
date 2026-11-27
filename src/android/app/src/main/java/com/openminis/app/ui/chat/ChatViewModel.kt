@@ -1218,6 +1218,21 @@ class ChatViewModel(
      * blank run — but that trimmed value drives the DECISION only, never the
      * assignment. Mirrors iOS `e6c0ace6a`.
      */
+    /**
+     * C12: inline translation (live translation in the chat UI). Sends the
+     * selected text as a translation request so the reply arrives in this
+     * conversation; the prompt asks for the translation only, translating
+     * Arabic to English, English to Arabic, and other languages to English.
+     */
+    fun sendTranslationRequest(text: String) {
+        if (text.isBlank()) return
+        sendMessage(
+            "Translate the following text: if it is Arabic, translate it to English; " +
+                "if it is English, translate it to Arabic; if it is any other language, " +
+                "translate it to English. Reply with the translation only, no explanations.\n\n" + text,
+        )
+    }
+
     fun appendToInputText(snippet: String) {
         val joined = joinDraftWithSnippet(_inputText.value, snippet) ?: return
         _inputText.value = joined

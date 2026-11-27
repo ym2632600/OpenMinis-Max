@@ -832,6 +832,7 @@
     <string name="notif_config_confirm_body_multi">%d تغييرات تحتاج مراجعتك — افتح Minis للموافقة أو الرفض.</string>
     <string name="notif_task_failed_body">انتهت المهمة بخطأ. اضغط لفتح المحادثة.</string>
     <string name="selection_add_to_chat_input">إضافة إلى حقل المحادثة</string>
+    <string name="selection_translate">ترجمة</string>
     <string name="selection_read_aloud">قراءة بصوت عالٍ</string>
     <string name="selection_copy">نسخ</string>
     <string name="selection_copy_markdown">نسخ كـ Markdown</string>

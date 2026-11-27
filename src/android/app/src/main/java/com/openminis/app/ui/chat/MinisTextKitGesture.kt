@@ -886,6 +886,12 @@ data class SelectionToolbarActions(
      */
     val onReadFromStart: ((String) -> Unit)? = null,
     /**
+     * C12: translate the currently-selected plain text inline - sends it as
+     * a translation request so the reply arrives in this chat. Null hides
+     * the button.
+     */
+    val onTranslate: ((String) -> Unit)? = null,
+    /**
      * [T-multi-select-share] Opens the share picker with the round of the message
      * that owns the selection preselected (null: a cross-message selection, nothing
      * preselected). Null hides the action. It is the bar's LAST item, as on iOS.
@@ -1100,6 +1106,8 @@ fun MinisSelectionToolbarHost(
                     com.openminis.app.R.string.markdown_table_copy_table)
                 val labelCopyTableImage = androidx.compose.ui.res.stringResource(
                     com.openminis.app.R.string.markdown_table_copy_table_image)
+                val labelTranslate = androidx.compose.ui.res.stringResource(
+                    com.openminis.app.R.string.selection_translate)
                 val labelShareChat = androidx.compose.ui.res.stringResource(
                     com.openminis.app.R.string.chat_share_share_chat)
 
@@ -1132,6 +1140,14 @@ fun MinisSelectionToolbarHost(
                         add(SelectionAction(labelAddToInput) {
                             val text = controller.selectedPlainText()
                             if (text.isNotEmpty()) actions.onAddToInput.invoke(text)
+                            controller.clearSelection()
+                        })
+                    }
+                    // C12: inline translation of the selection.
+                    if (actions?.onTranslate != null) {
+                        add(SelectionAction(labelTranslate) {
+                            val text = controller.selectedPlainText()
+                            if (text.isNotEmpty()) actions.onTranslate.invoke(text)
                             controller.clearSelection()
                         })
                     }
