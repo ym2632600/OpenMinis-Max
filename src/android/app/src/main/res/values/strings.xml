@@ -107,6 +107,11 @@
     <string name="mic_permission_message">Voice input needs microphone permission. Tap Open Settings to allow it for Minis.</string>
     <string name="mic_permission_open_settings">Open Settings</string>
     <string name="mic_permission_cancel">Cancel</string>
+    <!-- B8: Camera permission settings-gate dialog (shown when CAMERA is permanently denied) -->
+    <string name="camera_permission_title">Camera permission needed</string>
+    <string name="camera_permission_message">Minis needs camera permission to take photos. Tap Open Settings to allow it for Minis.</string>
+    <string name="camera_permission_open_settings">Open Settings</string>
+    <string name="camera_permission_cancel">Cancel</string>
 
     <!-- T50: Background & notifications -->
     <string name="bg_section_header">Background &amp; notifications</string>
