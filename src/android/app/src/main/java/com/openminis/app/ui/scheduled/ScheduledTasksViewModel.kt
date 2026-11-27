@@ -150,6 +150,26 @@ class ScheduledTasksViewModel(private val appContext: Context) : ViewModel() {
         viewModelScope.launch(Dispatchers.IO) { manager.setEnabled(taskId, enabled) }
     }
 
+    /**
+     * C2: one-tap "morning security brief" preset. Creates a daily 08:00
+     * task that runs the bundled security-brief skill. No-op when a task
+     * with the same label already exists.
+     */
+    fun addSecurityBriefPreset(label: String, prompt: String) {
+        if (tasks.value.any { it.label == label }) return
+        viewModelScope.launch(Dispatchers.IO) {
+            manager.create(
+                ScheduledTask(
+                    label = label,
+                    timeOfDayHour = 8,
+                    timeOfDayMinute = 0,
+                    repeatMode = ScheduledRepeatMode.DAILY,
+                    prompt = prompt,
+                ),
+            )
+        }
+    }
+
     fun delete(taskId: String) {
         viewModelScope.launch(Dispatchers.IO) { manager.delete(taskId) }
     }

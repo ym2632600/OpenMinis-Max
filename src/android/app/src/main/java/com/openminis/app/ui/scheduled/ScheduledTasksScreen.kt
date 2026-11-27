@@ -121,6 +121,17 @@ fun ScheduledTasksScreen(
                             expanded = showMenu,
                             onDismissRequest = { showMenu = false },
                         ) {
+                            // C2: one-tap morning security-brief preset.
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.scheduled_tasks_add_security_brief)) },
+                                onClick = {
+                                    showMenu = false
+                                    vm.addSecurityBriefPreset(
+                                        label = context.getString(R.string.security_brief_task_label),
+                                        prompt = SECURITY_BRIEF_TASK_PROMPT,
+                                    )
+                                },
+                            )
                             DropdownMenuItem(
                                 text = { Text(stringResource(R.string.scheduled_tasks_show_home_badge)) },
                                 onClick = { vm.setShowHomeBadge(!showHomeBadge) },
@@ -355,3 +366,14 @@ private fun dowShort(dow: Int): String = when (dow) {
     java.util.Calendar.SATURDAY -> "Sat"
     else -> ""
 }
+
+/**
+ * C2: prompt for the morning security-brief scheduled task. English on
+ * purpose (model instructions); the skill directs the reply language.
+ */
+private const val SECURITY_BRIEF_TASK_PROMPT =
+    "You are the user's security research agent. Follow the security-brief skill exactly: " +
+    "collect the most relevant new CVEs and security news from the last 24-48 hours for the " +
+    "user's stack (Android, Kotlin, Linux servers, self-hosted LLM tooling, OpenAI-compatible " +
+    "APIs, SSH), check them against the CISA KEV catalog, and deliver a short morning brief " +
+    "(max 15 lines) in the app's UI language with one concrete action line at the end."

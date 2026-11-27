@@ -1236,14 +1236,18 @@ class SkillRepository(private val context: Context) {
     // -- Bundled Skills --
 
     private fun installBundledSkills() {
-        val bundledId = "skill-creator"
-        val bundledVersion = "2.0.0"
+        installBundledSkill("skill-creator", "2.0.0", SKILL_CREATOR_CONTENT)
+        // C2: security research agent - the morning-brief preset drives it.
+        installBundledSkill("security-brief", "1.0.0", SECURITY_BRIEF_CONTENT)
+    }
+
+    private fun installBundledSkill(bundledId: String, bundledVersion: String, content: String) {
         val existing = _skills.value.find { it.id == bundledId }
 
         // Skip if local version is same or newer
         if (existing != null && existing.version >= bundledVersion) return
 
-        val parsed = parseSkillMd(SKILL_CREATOR_CONTENT) ?: return
+        val parsed = parseSkillMd(content) ?: return
         if (existing != null) {
             // Upgrade existing
             val updated = existing.copy(
@@ -1778,3 +1782,52 @@ Skills use three loading levels:
 
 Do not create extraneous files: README.md, INSTALLATION_GUIDE.md, CHANGELOG.md, etc. The skill should only contain what an AI agent needs to do the job.
 """.trimIndent()
+
+
+/**
+ * C2: bundled "security-brief" skill. The scheduled morning-brief preset
+ * instructs the agent to follow this playbook.
+ */
+private val SECURITY_BRIEF_CONTENT = """
+---
+name: security-brief
+version: 1.0.0
+description: Collect new CVEs and security news relevant to the user's stack and write a short, plain-language security brief. Use when the user asks for a security digest, morning security brief, or CVE roundup.
+---
+
+# Security Brief
+
+Produce a short, calm, plain-language security brief. Never alarmist; always actionable.
+
+## Sources (all free, no API key)
+
+- NVD API v2 for recent CVEs:
+  `curl -s "https://services.nvd.nist.gov/rest/json/cves/2.0?pubStartDate=<ISO-8601 start>&pubEndDate=<ISO-8601 end>"`
+  Cover the last 24-48 hours. Extract id, published date, description, and CVSS base score when present.
+- CISA Known Exploited Vulnerabilities catalog:
+  `curl -s "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json"`
+  Check whether any of the recent CVEs you found appear here; those come first in the brief.
+- Security headlines: the built-in web fetch/search tools, or curl an RSS feed such as
+  `https://feeds.feedburner.com/TheHackersNews`.
+
+If a source fails, note it in one short line and continue with the others. Never invent CVE
+ids, scores, or dates; if you cannot verify an item, leave it out.
+
+## Relevance filter
+
+Prioritize what touches the user's stack: Android, Kotlin, Google Play/app updates, Linux
+servers, self-hosted LLM tooling (Ollama, OpenAI-compatible APIs), SSH, and supply-chain
+issues in popular developer tools. Generic enterprise items (SAP, Citrix, etc.) go last or
+get dropped when space runs out.
+
+## Output format
+
+- Language: write the brief in the app's current UI language (Arabic when the UI is Arabic,
+  otherwise English).
+- Length: at most 15 lines.
+- Structure: 3-7 items, each one line: what it is + why it matters in plain words. Put any
+  actively-exploited (CISA KEV) items first.
+- End with exactly one concrete action line (update X, rotate Y) when warranted, otherwise
+  one line saying no action is needed today.
+- If nothing notable happened, say so in a single line instead of padding.
+"""

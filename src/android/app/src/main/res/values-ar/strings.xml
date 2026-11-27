@@ -1236,4 +1236,7 @@
     <string name="focus_channel_description">ملخص مجمع للإشعارات المحجوبة أثناء وضع التركيز</string>
     <string name="focus_summary_title">أثناء تركيزك</string>
     <string name="focus_summary_body">تم حجب %1$d إشعار:</string>
+    <!-- C2: security research agent -->
+    <string name="scheduled_tasks_add_security_brief">إضافة الموجز الأمني الصباحي</string>
+    <string name="security_brief_task_label">الموجز الأمني الصباحي</string>
 </resources>

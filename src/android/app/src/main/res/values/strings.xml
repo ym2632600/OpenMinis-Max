@@ -2899,4 +2899,7 @@
     <string name="focus_channel_description">Batched summary of notifications held while focus mode was on</string>
     <string name="focus_summary_title">While you focused</string>
     <string name="focus_summary_body">%1$d notification(s) were held:</string>
+    <!-- C2: security research agent -->
+    <string name="scheduled_tasks_add_security_brief">Add morning security brief</string>
+    <string name="security_brief_task_label">Morning security brief</string>
 </resources>
