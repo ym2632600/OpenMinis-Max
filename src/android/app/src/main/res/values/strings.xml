@@ -829,6 +829,8 @@
     <string name="settings_memory_global_enabled_subtitle">When off, new sessions skip GLOBAL.md and daily memory by default</string>
     <string name="memory_empty_title">No Memory Files</string>
     <string name="memory_empty_description">Memory files store persistent knowledge across sessions. Edit GLOBAL.md to add instructions visible to the Agent.</string>
+    <string name="memory_search_hint">Search memory files</string>
+    <string name="memory_search_empty">No memory files match \"%1$s\"</string>
     <string name="memory_section_files">Files</string>
     <string name="memory_section_footer">GLOBAL.md contains persistent instructions visible to the Agent. Daily logs are created automatically during conversations.</string>
     <string name="memory_delete_confirm_title">Delete %1$s?</string>

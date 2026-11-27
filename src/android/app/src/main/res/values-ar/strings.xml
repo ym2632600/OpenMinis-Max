@@ -2008,6 +2008,8 @@
     <string name="memory_title">الذاكرة</string>
     <string name="memory_empty_title">لا توجد ملفات ذاكرة</string>
     <string name="memory_empty_description">ملفات الذاكرة تخزّن معرفة دائمة عبر الجلسات. عدّل GLOBAL.md لإضافة تعليمات يراها الوكيل.</string>
+    <string name="memory_search_hint">ابحث في ملفات الذاكرة</string>
+    <string name="memory_search_empty">لا توجد ملفات ذاكرة تطابق \"%1$s\"</string>
     <string name="memory_section_files">الملفات</string>
     <string name="memory_section_footer">يحتوي GLOBAL.md على تعليمات دائمة يراها الوكيل. تُنشأ السجلات اليومية تلقائيًا أثناء المحادثات.</string>
     <string name="memory_delete_confirm_title">حذف %1$s؟</string>

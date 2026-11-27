@@ -27,8 +27,12 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -64,6 +68,12 @@ fun MemoryManagementScreen(
 ) {
     var files by remember { mutableStateOf<List<MemoryRepository.MemoryFileInfo>>(emptyList()) }
     var deleteFileName by remember { mutableStateOf<String?>(null) }
+    // [A10] Search over memory files: matches file name, preview line, and
+    // full file content. Memory files are few and small (KBs), so a direct
+    // scan is instant and no FTS index is needed here; contents are loaded
+    // lazily the first time the user types.
+    var searchQuery by remember { mutableStateOf("") }
+    var fileContents by remember { mutableStateOf<Map<String, String>?>(null) }
     val context = androidx.compose.ui.platform.LocalContext.current
     // [T-memory-global-toggle-settings-ui-android] Global default for
     // newly-created sessions. Stored separately from per-session
@@ -77,6 +87,22 @@ fun MemoryManagementScreen(
 
     LaunchedEffect(Unit) {
         files = memoryRepository.listAllFiles()
+    }
+
+    LaunchedEffect(searchQuery.isNotBlank()) {
+        if (searchQuery.isNotBlank() && fileContents == null) {
+            fileContents = files.associate { it.name to memoryRepository.readFile(it.name) }
+        }
+    }
+
+    val filteredFiles = remember(files, fileContents, searchQuery) {
+        val q = searchQuery.trim()
+        if (q.isEmpty()) files
+        else files.filter { f ->
+            f.name.contains(q, ignoreCase = true) ||
+                f.preview.contains(q, ignoreCase = true) ||
+                (fileContents?.get(f.name)?.contains(q, ignoreCase = true) == true)
+        }
     }
 
     SettingsScaffold(title = stringResource(R.string.memory_title), onBack = onBack) {
@@ -99,6 +125,18 @@ fun MemoryManagementScreen(
         }
         Spacer(modifier = Modifier.height(16.dp))
 
+        if (files.isNotEmpty()) {
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                modifier = Modifier.fillMaxWidth(),
+                placeholder = { Text(stringResource(R.string.memory_search_hint)) },
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                singleLine = true,
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
         if (files.isEmpty()) {
             Column(
                 modifier = Modifier
@@ -115,18 +153,31 @@ fun MemoryManagementScreen(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
+        } else if (filteredFiles.isEmpty()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text(
+                    stringResource(R.string.memory_search_empty, searchQuery.trim()),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         } else {
             SettingsSection(
                 header = stringResource(R.string.memory_section_files),
                 footer = stringResource(R.string.memory_section_footer),
             ) {
-                files.forEachIndexed { index, file ->
+                filteredFiles.forEachIndexed { index, file ->
                     MemoryFileRow(
                         file = file,
                         onClick = { onFileClick(file.name, file.isGlobal) },
                         onDelete = if (!file.isGlobal) { { deleteFileName = file.name } } else null,
                     )
-                    if (index < files.size - 1) {
+                    if (index < filteredFiles.size - 1) {
                         HorizontalDivider(
                             modifier = Modifier.padding(start = 16.dp),
                             color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
