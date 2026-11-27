@@ -1402,6 +1402,9 @@
     <string name="settings_bg_overlay">Background Task Overlay</string>
     <string name="settings_bg_overlay_footer">Show a small floating capsule with the current tool while Minis is in the background. Requires permission to display over other apps. Tap the capsule to bring Minis to the foreground; drag to move it.</string>
     <string name="settings_bg_overlay_permission_needed">Allow drawing over other apps to enable</string>
+    <string name="settings_bubble">Floating Chat Bubble</string>
+    <string name="settings_bubble_footer">Show a small floating bubble over other apps so you can summon Minis from any screen. Tap it to open the last chat; drag to move it.</string>
+    <string name="bubble_hide">Hide bubble</string>
     <!-- [T-android-dynamic-island] Android 16 Live Updates / dynamic-island toggle. -->
     <string name="settings_dynamic_island">Dynamic Island (Live Updates)</string>
     <string name="settings_dynamic_island_footer">Show live Agent status on the Android 16 status chip. When on, this replaces the floating overlay so you don\'t see two status indicators at once.</string>
