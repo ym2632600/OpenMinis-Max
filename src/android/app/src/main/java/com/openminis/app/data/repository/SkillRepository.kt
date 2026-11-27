@@ -1251,6 +1251,8 @@ class SkillRepository(private val context: Context) {
         installBundledSkill("pentest-lab", "1.0.0", PENTEST_LAB_CONTENT)
         // C5: screen-record and explain - recap what happened on screen.
         installBundledSkill("screen-recap", "1.0.0", SCREEN_RECAP_CONTENT)
+        // C6: app generator - idea to scaffolded Android project built via free CI.
+        installBundledSkill("app-generator", "1.0.0", APP_GENERATOR_CONTENT)
     }
 
     private fun installBundledSkill(bundledId: String, bundledVersion: String, content: String) {
@@ -1800,6 +1802,52 @@ Do not create extraneous files: README.md, INSTALLATION_GUIDE.md, CHANGELOG.md, 
  * C2: bundled "security-brief" skill. The scheduled morning-brief preset
  * instructs the agent to follow this playbook.
  */
+private val APP_GENERATOR_CONTENT = """
+---
+name: app-generator
+version: 1.0.0
+description: Turn an app idea into a real Android app - scaffold a complete Android project and build it through a free CI path (GitHub Actions free tier), delivering an APK download or a repo link. Use when the user describes an app idea and wants it built.
+---
+
+# App Generator
+
+"Describe an idea, get an Android app." You scaffold the project, the free cloud builds
+it, the user gets an APK or repo link. The user reviews and approves the plan before
+anything is created.
+
+## Plan first
+
+1. Ask at most three questions (one message): app name, what it does in one sentence,
+   and the one screen or feature that matters most. Sensible defaults for the rest.
+2. Reply with the plan: project name, package id, the screens, and where it will be built.
+   Wait for the user's yes before writing files.
+
+## Scaffold
+
+- Create the project under app-projects/<name>/ using file_write: a minimal modern
+  Android app (Gradle Kotlin DSL, compileSdk 34+, one MainActivity, Jetpack Compose,
+  no paid or API-key dependencies).
+- Keep the first version small and working: one good screen beats five broken ones.
+- Include a GitHub Actions workflow (.github/workflows/build.yml) that assembles the
+  debug APK on ubuntu-latest with setup-java 17 and uploads it as an artifact - model it
+  on a standard android-ci template, no secrets required.
+
+## Build (free CI path)
+
+- The build happens on GitHub Actions free tier. The user needs a GitHub account and a
+  repo; if they already have one connected, offer to create app-projects repos there.
+- Never create accounts, tokens, or repos silently: each remote step (create repo, push,
+  trigger workflow) is confirmed with the user first.
+- When the run finishes, deliver the artifact link or the repo URL. If the build fails,
+  read the log, fix the project, and push again - iterate until green, like any CI loop.
+
+## Rules
+
+- Free tools only: no paid services, no API keys that cost money, no trial signups.
+- The user owns everything: their GitHub account, their repo, their app.
+- If the idea needs a paid backend, say so plainly and propose a free alternative.
+"""
+
 private val SCREEN_RECAP_CONTENT = """
 ---
 name: screen-recap
