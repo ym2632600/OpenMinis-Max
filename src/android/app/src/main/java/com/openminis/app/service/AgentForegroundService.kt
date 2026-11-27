@@ -126,6 +126,8 @@ class AgentForegroundService : Service() {
         // framework reads ("android.requestPromotedOngoing").
         private const val EXTRA_REQUEST_PROMOTED_ONGOING = "android.requestPromotedOngoing"
         private const val ACTION_STOP = "com.openminis.app.STOP_AGENT_SERVICE"
+        /** [B5] Notification action that hides the floating bubble until the app is foregrounded again. */
+        private const val ACTION_HIDE_BUBBLE = "com.openminis.app.HIDE_BUBBLE"
 
         /**
          * Starts or updates the foreground service with current status.
@@ -216,6 +218,17 @@ class AgentForegroundService : Service() {
      * down deterministically.
      */
     private var overlayController: ToolOverlayController? = null
+    // [B5] Floating chat bubble: one controller for the service
+    // lifetime, created in [startOverlayObserver] and dropped in
+    // [onDestroy] - the same ownership pattern as [overlayController].
+    private var bubbleController: BubbleOverlayController? = null
+    // [B5] True after the user hides the bubble from the notification
+    // until the app comes back to the foreground. The toggle stays on;
+    // this only suppresses this showing.
+    private var bubbleDismissedUntilForeground = false
+    // [B5] Whether the bubble is on screen right now, as last driven by
+    // [applyOverlayState]. Drives the bubble-only notification text.
+    private var bubbleShown = false
     private val overlayScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
     // [T-android-live-update-chip] See ensureChipTicker().
@@ -384,6 +397,18 @@ class AgentForegroundService : Service() {
             stopSelf()
             return START_NOT_STICKY
         }
+            if (intent?.action == ACTION_HIDE_BUBBLE) {
+        // [B5] The notification Hide action: put the bubble away until
+        // the app comes back to the foreground. The toggle stays on, and
+        // the service stays alive for anything else it owes (a session,
+        // a schedule, a completion capsule); releasing the bubble
+        // keep-alive lets the tracker stop it when the bubble was the
+        // only reason.
+        bubbleDismissedUntilForeground = true
+        hideBubble()
+        SessionActivityTracker.setBubbleKeepAlive(false)
+        return START_NOT_STICKY
+            }
 
         val sessionCount = intent?.getIntExtra(EXTRA_SESSION_COUNT, 0)
             ?: SessionActivityTracker.sessionCountForNotification()
@@ -486,6 +511,17 @@ class AgentForegroundService : Service() {
             overlayController?.hide()
         } catch (_: Throwable) {}
         overlayController = null
+            // [B5] Take the bubble down the same way: the controller has no
+            // public hide, so feed it a foreground input and let refresh()
+            // remove the view. Clear the keep-alive too, or a destroyed
+            // service would leave shouldRunService() true forever.
+            try {
+                        bubbleController?.updateInput(
+                                        BubbleInput(appInForeground = true, toolRunning = false, dynamicIslandActive = false),
+                                    )
+            } catch (_: Throwable) {}
+                bubbleController = null
+            SessionActivityTracker.setBubbleKeepAlive(false)
         overlayScope.cancel()
         super.onDestroy()
         Log.d(TAG, "Service destroyed")
@@ -542,6 +578,10 @@ class AgentForegroundService : Service() {
                 SessionActivityTracker.dismissOverlay()
             }
         }
+        // [B5] Floating chat bubble: one controller for the service lifetime,
+        // created here and dropped in [onDestroy] - the same ownership
+        // pattern as [overlayController].
+        bubbleController = BubbleOverlayController(applicationContext)
         val backgroundRepo = app.backgroundSettingsRepository
 
         overlayScope.launch {
@@ -577,6 +617,9 @@ class AgentForegroundService : Service() {
                 // [T-port-sched-overlay-waiting] A chat waiting for its next
                 // scheduled run: the capsule shows that, not "completed".
                 SessionActivityTracker.scheduledWait,
+        // [B5] The bubble toggle: flipping it must show/hide the bubble
+        // live, without an app restart - and feed the keep-alive.
+        backgroundRepo.bubbleEnabled,
             ) { values: Array<Any?> ->
                 @Suppress("UNCHECKED_CAST")
                 val activeSessions = values[13] as Set<String>
@@ -599,6 +642,7 @@ class AgentForegroundService : Service() {
                     soulIdentity = (values[15] as SoulMetadata).let { it.name to it.icon },
                     isThinking = values[16] as Boolean,
                     scheduledWait = values[17] as com.openminis.app.scheduled.ScheduledWait?,
+        bubbleEnabled = values[18] as Boolean,
                 )
             }.distinctUntilChanged().collect { state -> applyOverlayState(state) }
         }
@@ -648,6 +692,9 @@ class AgentForegroundService : Service() {
         // [T-port-sched-overlay-waiting] The next scheduled run of a chat its
         // task keeps active, or null.
         val scheduledWait: com.openminis.app.scheduled.ScheduledWait? = null,
+            // [B5] Floating chat bubble toggle: carried so flipping it re-emits
+            // and feeds the keep-alive.
+            val bubbleEnabled: Boolean = false,
     )
 
     private fun applyOverlayState(state: OverlayState) {
@@ -667,6 +714,8 @@ class AgentForegroundService : Service() {
         // the system Live-Updates grant hides/reveals the overlay live.
         if (DynamicIslandSupport.isDynamicIslandActive(this, state.dynamicIslandEnabled)) {
             hideOverlay()
+        hideBubble()
+        SessionActivityTracker.setBubbleKeepAlive(false)
             lingerJob?.cancel()
             lingerJob = null
             hasCompletionPending = false
@@ -785,10 +834,33 @@ class AgentForegroundService : Service() {
             if (state.isForeground) {
                 hasCompletionPending = false
                 SessionActivityTracker.setOverlayCompletionPending(false)
+            // [B5] Back in the app: a notification Hide is forgiven, and a
+            // bubble the user long-pressed away may show again next time
+            // the app backgrounds.
+            bubbleDismissedUntilForeground = false
             }
             lingerJob?.cancel()
             lingerJob = null
             hideOverlay()
+        // [B5] The capsule cannot show here, but the bubble is not the
+        // capsule: it has its own toggle, and it is still owed when the
+        // only thing in the way is the capsule toggle being off. It is
+        // never owed over the app itself, without the overlay permission,
+        // or over the camera.
+        if (!state.isForeground && state.bubbleEnabled && hasPerm &&
+            !state.cameraSuppress && !bubbleDismissedUntilForeground
+        ) {
+            showBubble(state)
+        } else {
+            // [B5] Feed the foreground input first (hides the bubble),
+            // then re-arm the controller's own dismiss flag:
+            // onAppForegrounded refreshes from the last input, so the
+            // order matters - the other way round would pop the bubble
+            // up over the chat.
+            hideBubble()
+            if (state.isForeground) bubbleController?.onAppForegrounded()
+            SessionActivityTracker.setBubbleKeepAlive(false)
+        }
             return
         }
 
@@ -842,7 +914,7 @@ class AgentForegroundService : Service() {
             // index can never describe different tasks.
             //
             // Read here rather than added to the combine() above: that call is
-            // already at 17 flows (its positional `values[n]` indexing is the
+        // already at 19 flows (its positional `values[n]` indexing is the
             // reason this file renumbers so badly), and the slot list changes
             // only on session start/stop — both of which already push a state
             // emission through activeSessions.
@@ -944,6 +1016,10 @@ class AgentForegroundService : Service() {
                     taskTotal = slot?.third ?: 0,
                 )
             }
+            // [B5] While a turn runs or lingers, the capsule is the active
+            // surface: the bubble stays down, and its keep-alive with it.
+            hideBubble()
+            SessionActivityTracker.setBubbleKeepAlive(false)
             return
         }
 
@@ -954,6 +1030,17 @@ class AgentForegroundService : Service() {
         // e.g. the turn ended in foreground), so the old "task finished →
         // proactively hide" semantics still hold for those cases.
         hideOverlay()
+        // [B5] Nothing for the capsule here, but the bubble may still be
+        // owed: idle, backgrounded, toggle on, permission granted, and
+        // not hidden until the app returns.
+        if (state.bubbleEnabled && hasPerm && !state.isForeground &&
+        !bubbleDismissedUntilForeground
+    ) {
+        showBubble(state)
+        } else {
+        hideBubble()
+        SessionActivityTracker.setBubbleKeepAlive(false)
+        }
     }
 
     /**
@@ -976,6 +1063,42 @@ class AgentForegroundService : Service() {
         // still run, and their slots are never re-registered mid-run.
         SessionActivityTracker.dropFinishedOverlayTasks()
     }
+
+    /**
+     * [B5] Take the bubble down. The controller has no public hide, so this
+     * feeds it a foreground input and lets [BubbleOverlayController.refresh]
+     * remove the view. The next [applyOverlayState] pass feeds the real input
+     * again, so this cannot strand the bubble hidden.
+     */
+     private fun hideBubble() {
+            bubbleController?.updateInput(
+                    BubbleInput(appInForeground = true, toolRunning = false, dynamicIslandActive = false),
+                )
+            if (bubbleShown) {
+                bubbleShown = false
+                refreshOngoingNotification()
+            }
+
+            
+            /**
+             * [B5] Put the bubble up for the given state. The keep-alive follows
+             * this decision, not [BubbleOverlayController.isShown], because show/hide
+             * are posted to the main handler and [isShown] lags one message behind.
+             */
+             private fun showBubble(state: OverlayState) {
+                     bubbleController?.updateInput(
+                             BubbleInput(
+                                     appInForeground = state.isForeground,
+                                 toolRunning = state.isRunning,
+                                 dynamicIslandActive = DynamicIslandSupport.isDynamicIslandActive(this, state.dynamicIslandEnabled),
+                                 ),
+                         )
+                     SessionActivityTracker.setBubbleKeepAlive(true)
+                     if (!bubbleShown) {
+                             bubbleShown = true
+                         refreshOngoingNotification()
+                     }
+             }
 
     /**
      * [T-android-dynamic-island] Re-post the ongoing status notification with
@@ -1288,7 +1411,18 @@ class AgentForegroundService : Service() {
             stopIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
-
+        // [B5] Hide the floating bubble until the app is foregrounded again.
+        // Request code 3: Stop uses 1, the permission nudge uses 2, and the
+        // main-activity intent uses 0.
+        val hideIntent = Intent(this, AgentForegroundService::class.java).apply {
+            action = ACTION_HIDE_BUBBLE
+        }
+        val hidePendingIntent = PendingIntent.getService(
+            this,
+            3,
+            hideIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
         val sessionLabel = resources.getQuantityString(
             R.plurals.bg_service_sessions, sessionCount, sessionCount,
         )
@@ -1334,7 +1468,7 @@ class AgentForegroundService : Service() {
         )
         val smallIcon = notificationSmallIconFor(phase, toolName, waitHasClock = scheduledWait?.nextRunMs != null)
         val soulName = SoulStore.cachedMetadata.value.name.ifBlank { SoulMetadata.DEFAULT.name }
-        val titleText = when (phase) {
+    var titleText = when (phase) {
             AgentPhase.COMPLETED -> getString(R.string.bg_service_notification_title_completed)
             AgentPhase.TOOL -> toolRowTitle(toolName!!, toolTitle)
             AgentPhase.THINKING, AgentPhase.GENERATING -> soulName
@@ -1351,7 +1485,7 @@ class AgentForegroundService : Service() {
         val firingCounter = SessionActivityTracker.scheduledFiring.value
             ?.takeIf { it.sessionId in SessionActivityTracker.activeSessions.value }
             ?.runCounter
-        val collapsedText = when (phase) {
+    var collapsedText = when (phase) {
             // Completed is a RESTING state: the chronometer is off, so the
             // total run time has to stay in the text or it would vanish.
             // [T-port-sched-completed-copy] No "0 sessions" when nothing is left.
@@ -1391,6 +1525,16 @@ class AgentForegroundService : Service() {
                 sessionLabel,
                 getString(R.string.user_ask_waiting),
             )
+        }
+    // [B5] When the bubble is the only reason the service is alive: no
+    // active session, no scheduled wait, no question waiting, no finished
+    // task, the notification reads as bubble status, with a Hide action
+    // instead of Stop. A finished task keeps its completion row, and a
+    // scheduled wait keeps its WAITING row.
+    val bubbleOnly = bubbleShown && !hasActiveSessions && scheduledWait == null && asking == null && !isCompleted
+        if (bubbleOnly) {
+            titleText = getString(R.string.bubble_notification_title)
+            collapsedText = getString(R.string.bubble_notification_body)
         }
         val clock = notificationClockFor(
             phase = phase,
@@ -1458,6 +1602,8 @@ class AgentForegroundService : Service() {
                 clock = clock,
                 contentIntent = pendingIntent,
                 stopIntent = stopPendingIntent,
+                bubbleOnly = bubbleOnly,
+                hideIntent = hidePendingIntent,
             )
         }
 
@@ -1486,10 +1632,11 @@ class AgentForegroundService : Service() {
         // [T-android-live-update-completed] Same rule as the promoted branch:
         // no Stop once there is nothing left to stop.
         if (!isCompleted) {
+            // [B5] Bubble-only: Hide the bubble, not Stop the service.
             builder.addAction(
                 android.R.drawable.ic_menu_close_clear_cancel,
-                getString(R.string.bg_service_stop_action),
-                stopPendingIntent,
+            getString(if (bubbleOnly) R.string.bubble_hide else R.string.bg_service_stop_action),
+            if (bubbleOnly) hidePendingIntent else stopPendingIntent,
             )
         }
 
@@ -1525,6 +1672,8 @@ class AgentForegroundService : Service() {
         clock: NotificationClock,
         contentIntent: PendingIntent,
         stopIntent: PendingIntent,
+        bubbleOnly: Boolean,
+        hideIntent: PendingIntent,
     ): Notification {
         // [T-android-dynamic-island] A ProgressStyle only counts as a valid
         // *promotable* style when it carries at least one progress segment with
@@ -1582,11 +1731,12 @@ class AgentForegroundService : Service() {
         // a tap that does nothing visible. Reported from a device screenshot
         // showing "任务已完成 ✓" above a live Stop button.
         if (!isCompleted) {
+            // [B5] Bubble-only: Hide the bubble, not Stop the service.
             builder.addAction(
                 Notification.Action.Builder(
-                    Icon.createWithResource(this, android.R.drawable.ic_menu_close_clear_cancel),
-                    getString(R.string.bg_service_stop_action),
-                    stopIntent,
+                Icon.createWithResource(this, android.R.drawable.ic_menu_close_clear_cancel),
+                getString(if (bubbleOnly) R.string.bubble_hide else R.string.bg_service_stop_action),
+                if (bubbleOnly) hideIntent else stopIntent,
                 ).build(),
             )
         }
