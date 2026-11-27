@@ -46,6 +46,15 @@ class MinisNotificationListenerService : NotificationListenerService() {
             extras?.getCharSequence("android.bigText")
                 ?: extras?.getCharSequence("android.text")
             )?.toString()
+        // C10: mini finance agent - parse money movements into the local
+        // ledger. Opt-in; no-ops unless the user enabled tracking.
+        try {
+            com.openminis.app.finance.FinanceRepository.recordFromNotification(
+                sbn.packageName, notifTitle, notifText,
+            )
+        } catch (t: Throwable) {
+            AppLogger.warning(TAG, "finance record failed: ${t.message}")
+        }
         // C13: focus mode - hold notifications from non-allowed apps; the
         // batched summary goes out when focus ends.
         val held = try {

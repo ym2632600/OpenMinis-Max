@@ -22,6 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.AutoAwesome
+import androidx.compose.material.icons.outlined.AccountBalanceWallet
 import androidx.compose.material.icons.outlined.Lan
 import androidx.compose.material.icons.outlined.Dns
 import androidx.compose.material.icons.outlined.History
@@ -110,6 +111,7 @@ fun SettingsScreen(
     onPermissionsClick: () -> Unit = {},
     onConsentClick: () -> Unit = {},
     onActivityLogClick: () -> Unit = {},
+    onFinanceClick: () -> Unit = {},
     onUsageClick: () -> Unit = {},
     onAppearanceClick: () -> Unit = {},
     onLogsClick: () -> Unit = {},
@@ -355,6 +357,14 @@ fun SettingsScreen(
                     title = stringResource(R.string.activity_log_title),
                     subtitle = stringResource(R.string.settings_activity_log_subtitle),
                     onClick = onActivityLogClick,
+                )
+                // C10: mini finance agent
+                SettingsItem(
+                    icon = Icons.Outlined.AccountBalanceWallet,
+                    iconColor = Color(0xFFAF52DE),
+                    title = stringResource(R.string.finance_title),
+                    subtitle = stringResource(R.string.settings_finance_subtitle),
+                    onClick = onFinanceClick,
                 )
                 // A5: data-flow transparency
                 SettingsItem(

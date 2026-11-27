@@ -1239,4 +1239,19 @@
     <!-- C2: security research agent -->
     <string name="scheduled_tasks_add_security_brief">إضافة الموجز الأمني الصباحي</string>
     <string name="security_brief_task_label">الموجز الأمني الصباحي</string>
+    <!-- C10: mini finance agent -->
+    <string name="finance_title">متتبع المصاريف</string>
+    <string name="settings_finance_subtitle">مصاريفك ودخلك من إشعارات البنك والمحافظ</string>
+    <string name="finance_tracking_toggle">التتبع من الإشعارات</string>
+    <string name="finance_tracking_subtitle">يقرأ إشعارات البنوك والمحافظ والمتاجر محليًا على الجهاز ويحتفظ بسجل محلي. بدون أي وصول لحسابات؛ لا يُرفع أي شيء.</string>
+    <string name="finance_week_empty">لا مصاريف مسجلة هذا الأسبوع</string>
+    <string name="finance_week_total">هذا الأسبوع: %1$s</string>
+    <string name="consent_scope_finance_track">تتبع المصاريف</string>
+    <string name="consent_scope_finance_track_desc">قراءة محتوى إشعارات البنوك والمحافظ محليًا للاحتفاظ بسجل مصاريف</string>
+    <string name="finance_channel_name">ملخصات مالية</string>
+    <string name="finance_channel_description">ملخص أسبوعي للمصاريف والدخل</string>
+    <string name="finance_weekly_title">أسبوعك المالي</string>
+    <string name="finance_weekly_spent">صرفت: %1$s</string>
+    <string name="finance_weekly_received">استلمت: %1$s</string>
+    <string name="finance_weekly_top">الأكثر: %1$s</string>
 </resources>

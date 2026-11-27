@@ -192,6 +192,7 @@ object Routes {
     const val PERMISSIONS = "permissions"
     const val CONSENT = "consent"
     const val ACTIVITY_LOG = "activity_log"
+    const val FINANCE = "finance"
     /**
      * T322 / [T-android-privileged-backend]: Shizuku-protocol manager
      * walkthrough — handles both Shizuku and AXManager (they share the same
@@ -673,6 +674,7 @@ fun AppNavigation(
                 onPermissionsClick = { navController.safeNavigate(Routes.PERMISSIONS) },
                 onConsentClick = { navController.safeNavigate(Routes.CONSENT) },
                 onActivityLogClick = { navController.safeNavigate(Routes.ACTIVITY_LOG) },
+                onFinanceClick = { navController.safeNavigate(Routes.FINANCE) },
                 onUsageClick = { navController.safeNavigate(Routes.USAGE_STATS) },
                 onAppearanceClick = { navController.safeNavigate(Routes.APPEARANCE) },
                 onBackgroundClick = { navController.safeNavigate(Routes.BACKGROUND) },
@@ -1482,6 +1484,12 @@ fun AppNavigation(
 
         composable(Routes.CONSENT) {
             ConsentSettingsScreen(
+                onBack = { navController.safePopBackStack() },
+            )
+        }
+
+        composable(Routes.FINANCE) {
+            com.openminis.app.ui.settings.FinanceScreen(
                 onBack = { navController.safePopBackStack() },
             )
         }

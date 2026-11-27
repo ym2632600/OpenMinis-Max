@@ -10,13 +10,14 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 @Database(
     entities = [
         ActivityLogEntity::class,
+        ExpenseEntity::class,
         ChatSessionEntity::class,
         MessageEntity::class,
         CompactMarkerEntity::class,
         WebAppShortcutEntity::class,
         FolderEntity::class,
     ],
-    version = 16,
+    version = 17,
     // [T-android-downgrade-compat] Kept ON so MigrationTestHelper and CI can
     // validate every migration (and its downgrade counterpart) against the
     // committed schema json. Without it the upgrade/downgrade chain has no
@@ -27,6 +28,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun chatDao(): ChatDao
     abstract fun webAppShortcutDao(): WebAppShortcutDao
     abstract fun activityLogDao(): ActivityLogDao
+    abstract fun expenseDao(): ExpenseDao
 
     companion object {
         @Volatile
@@ -428,6 +430,36 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        /** [C10] expenses table: notification-parsed expense tracker rows. */
+        val MIGRATION_16_17 = object : Migration(16, 17) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `expenses` (
+                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        `timestamp` INTEGER NOT NULL,
+                        `sourcePackage` TEXT NOT NULL,
+                        `direction` TEXT NOT NULL,
+                        `amount` REAL NOT NULL,
+                        `currency` TEXT NOT NULL,
+                        `merchant` TEXT,
+                        `rawTitle` TEXT,
+                        `dedupeKey` TEXT NOT NULL
+                    )
+                    """.trimIndent()
+                )
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_expenses_timestamp` ON `expenses` (`timestamp`)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_expenses_dedupeKey` ON `expenses` (`dedupeKey`)")
+            }
+        }
+
+        /** [C10] Downgrade counterpart of [MIGRATION_16_17]. */
+        val MIGRATION_17_16 = object : Migration(17, 16) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("DROP TABLE IF EXISTS `expenses`")
+            }
+        }
+
         fun getInstance(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 INSTANCE ?: Room.databaseBuilder(
@@ -442,7 +474,7 @@ abstract class AppDatabase : RoomDatabase() {
                         MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6,
                         MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11,
                         MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_12, MIGRATION_12_11,
-                        MIGRATION_13_14, MIGRATION_14_13, MIGRATION_14_15, MIGRATION_15_14, MIGRATION_15_16, MIGRATION_16_15,
+                        MIGRATION_13_14, MIGRATION_14_13, MIGRATION_14_15, MIGRATION_15_14, MIGRATION_15_16, MIGRATION_16_15, MIGRATION_16_17, MIGRATION_17_16,
                     )
                     .build()
                     .also { INSTANCE = it }

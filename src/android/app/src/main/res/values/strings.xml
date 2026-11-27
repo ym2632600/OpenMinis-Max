@@ -2902,4 +2902,19 @@
     <!-- C2: security research agent -->
     <string name="scheduled_tasks_add_security_brief">Add morning security brief</string>
     <string name="security_brief_task_label">Morning security brief</string>
+    <!-- C10: mini finance agent -->
+    <string name="finance_title">Expense tracker</string>
+    <string name="settings_finance_subtitle">Expenses and income parsed from bank and wallet notifications</string>
+    <string name="finance_tracking_toggle">Track from notifications</string>
+    <string name="finance_tracking_subtitle">Read bank, wallet and merchant notifications on-device and keep a local ledger. No account access; nothing is uploaded.</string>
+    <string name="finance_week_empty">No spending recorded this week</string>
+    <string name="finance_week_total">This week: %1$s</string>
+    <string name="consent_scope_finance_track">Expense tracking</string>
+    <string name="consent_scope_finance_track_desc">Read bank and wallet notification content on-device to keep a local expense ledger</string>
+    <string name="finance_channel_name">Finance summaries</string>
+    <string name="finance_channel_description">Weekly expense and income summary</string>
+    <string name="finance_weekly_title">Your week in money</string>
+    <string name="finance_weekly_spent">Spent: %1$s</string>
+    <string name="finance_weekly_received">Received: %1$s</string>
+    <string name="finance_weekly_top">Top: %1$s</string>
 </resources>
