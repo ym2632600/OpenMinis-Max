@@ -24,18 +24,21 @@ class BackgroundSettingsExternalWriteTest {
         val repo = BackgroundSettingsRepository(ctx)
         repo.setDynamicIslandEnabled(true)
         repo.setBackgroundOverlayEnabled(true)
+        repo.setBubbleEnabled(true)
         assertTrue(repo.taskNotificationsEnabled.value)
 
         // What ConfigBuiltins' PrefsBoolField does.
         ctx.getSharedPreferences("background_settings", Context.MODE_PRIVATE).edit()
             .putBoolean("dynamicIslandEnabled", false)
             .putBoolean("backgroundOverlayEnabled", false)
+            .putBoolean("bubbleEnabled", false)
             .putBoolean("taskNotificationsEnabled", false)
             .apply()
         org.robolectric.shadows.ShadowLooper.idleMainLooper()
 
         assertFalse(repo.dynamicIslandEnabled.value)
         assertFalse(repo.backgroundOverlayEnabled.value)
+        assertFalse(repo.bubbleEnabled.value)
         assertFalse(repo.taskNotificationsEnabled.value)
     }
 }

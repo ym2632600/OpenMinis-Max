@@ -54,6 +54,21 @@ class BackgroundSettingsRepository(context: Context) {
     }
 
     /**
+     * B5: "show floating chat bubble" toggle. Defaults to OFF — the bubble
+     * needs SYSTEM_ALERT_WINDOW, same as the background overlay, so we won't
+     * surface anything until the user opts in.
+     */
+    private val _bubbleEnabled =
+        MutableStateFlow(prefs.getBoolean(KEY_BUBBLE_ENABLED, false))
+    val bubbleEnabled: StateFlow<Boolean> =
+        _bubbleEnabled.asStateFlow()
+
+    fun setBubbleEnabled(value: Boolean) {
+        prefs.edit().putBoolean(KEY_BUBBLE_ENABLED, value).apply()
+        _bubbleEnabled.value = value
+    }
+
+    /**
      * [T-android-dynamic-island] "Show live status on the dynamic island"
      * toggle (Android 16 Live Updates). Defaults to OFF — the capability only
      * exists on Android 16+ with the per-app grant, and when ON it REPLACES the
@@ -104,6 +119,7 @@ class BackgroundSettingsRepository(context: Context) {
             KEY_TASK_NOTIFICATIONS ->
                 _taskNotificationsEnabled.value = p.getBoolean(key, DEFAULT_TASK_NOTIFICATIONS)
             KEY_BG_OVERLAY_ENABLED -> _backgroundOverlayEnabled.value = p.getBoolean(key, false)
+            KEY_BUBBLE_ENABLED -> _bubbleEnabled.value = p.getBoolean(key, false)
             KEY_DYNAMIC_ISLAND_ENABLED -> _dynamicIslandEnabled.value = p.getBoolean(key, false)
             KEY_SCHEDULED_COUNTDOWN_LEAD -> _scheduledCountdownLead.value = readScheduledCountdownLead(p)
         }
@@ -149,6 +165,7 @@ class BackgroundSettingsRepository(context: Context) {
         internal const val KEY_TASK_NOTIFICATIONS = "taskNotificationsEnabled"
         internal const val DEFAULT_TASK_NOTIFICATIONS = true
         private const val KEY_BG_OVERLAY_ENABLED = "backgroundOverlayEnabled"
+        private const val KEY_BUBBLE_ENABLED = "bubbleEnabled"
         private const val KEY_BG_OVERLAY_X = "backgroundOverlayX"
         private const val KEY_BG_OVERLAY_Y = "backgroundOverlayY"
         private const val KEY_BG_OVERLAY_LAND_X = "backgroundOverlayLandscapeX"
