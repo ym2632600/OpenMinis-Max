@@ -1661,6 +1661,9 @@
     <string name="settings_bubble">فقاعة الدردشة العائمة</string>
     <string name="settings_bubble_footer">إظهار فقاعة صغيرة عائمة فوق التطبيقات الأخرى لاستدعاء Minis من أي شاشة. اضغط عليها لفتح آخر محادثة، واسحبها لنقلها.</string>
     <string name="bubble_hide">إخفاء الفقاعة</string>
+        <!-- B5: floating bubble notification. -->
+        <string name="bubble_notification_title">الفقاعة العائمة نشطة</string>
+        <string name="bubble_notification_body">اضغط لفتح Minis، أو لإخفاء الفقاعة حتى تعود إلى التطبيق.</string>
     <string name="settings_dynamic_island">الجزيرة الديناميكية (التحديثات المباشرة)</string>
     <string name="settings_dynamic_island_footer">إظهار حالة الوكيل المباشرة على شريحة الحالة في Android 16. عند التفعيل، تحل محل النافذة العائمة.</string>
     <string name="settings_scheduled_countdown">عدّاد المهام المجدولة</string>
