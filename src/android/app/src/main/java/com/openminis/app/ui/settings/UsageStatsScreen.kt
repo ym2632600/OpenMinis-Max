@@ -775,8 +775,7 @@ private fun DailyLimitCard() {
             )
             if (cap > 0) {
                 LinearProgressIndicator(
-                    @Suppress("DEPRECATION")
-                    progress = (today.toFloat() / cap.toFloat()).coerceIn(0f, 1f),
+                    progress = { (today.toFloat() / cap.toFloat()).coerceIn(0f, 1f) },
                     modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
                 )
             }
