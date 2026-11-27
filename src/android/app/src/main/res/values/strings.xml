@@ -2850,4 +2850,13 @@
     <string name="token_usage_section_today">Today</string>
     <string name="token_usage_today_total">Tokens today</string>
     <string name="token_usage_daily_cap">Daily limit</string>
+    <!-- A15: skill source-risk warning -->
+    <string name="skill_warning_title">Skill from an unknown source</string>
+    <string name="skill_warning_body">A skill is a set of instructions the agent follows. Skills from outside the app can direct it to read and write files, run commands, and use the network. Only approve skills you trust. This is asked once per skill.</string>
+    <string name="skill_warning_source_url">Source: %1$s</string>
+    <string name="skill_warning_source_file">Source: imported from a file</string>
+    <string name="skill_warning_source_session">Source: created inside a chat session</string>
+    <string name="skill_warning_approve">Approve &amp; enable</string>
+    <string name="skill_warning_import">Import</string>
+    <string name="skill_warning_deny">Cancel</string>
 </resources>

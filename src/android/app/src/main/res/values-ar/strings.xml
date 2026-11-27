@@ -1187,4 +1187,13 @@
     <string name="token_usage_today_total">توكنات اليوم</string>
     <string name="token_usage_daily_cap">الحد اليومي</string>
     <string name="sessionlist_welcome_restore_backup">لديك نسخة احتياطية؟ استعد منها</string>
+    <!-- A15: skill source-risk warning -->
+    <string name="skill_warning_title">مهارة من مصدر غير معروف</string>
+    <string name="skill_warning_body">المهارة هي مجموعة تعليمات يتبعها الوكيل. المهارات من خارج التطبيق يمكن أن توجهه لقراءة الملفات وكتابتها وتشغيل أوامر واستخدام الشبكة. وافق فقط على المهارات التي تثق بها. يُسأل عن هذا مرة واحدة لكل مهارة.</string>
+    <string name="skill_warning_source_url">المصدر: %1$s</string>
+    <string name="skill_warning_source_file">المصدر: مستوردة من ملف</string>
+    <string name="skill_warning_source_session">المصدر: أُنشئت داخل محادثة</string>
+    <string name="skill_warning_approve">الموافقة والتفعيل</string>
+    <string name="skill_warning_import">استيراد</string>
+    <string name="skill_warning_deny">إلغاء</string>
 </resources>

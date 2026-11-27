@@ -18,6 +18,8 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -74,6 +76,8 @@ fun MinisSkillsBrowserScreen(
     var currentUrl by remember { mutableStateOf("https://github.com/OpenMinis/MinisSkills") }
     var hudState by remember { mutableStateOf(HudState.HIDDEN) }
     var hudMessage by remember { mutableStateOf("") }
+    // A15: URL pending the source-risk warning before import.
+    var pendingImportUrl by remember { mutableStateOf<String?>(null) }
     var webViewRef by remember { mutableStateOf<WebView?>(null) }
     val scope = rememberCoroutineScope()
 
@@ -107,17 +111,8 @@ fun MinisSkillsBrowserScreen(
                 actions = {
                     MinisTextButton(
                         onClick = {
-                            scope.launch {
-                                importSkillFromCurrentUrl(
-                                    context = context,
-                                    url = currentUrl,
-                                    skillRepository = skillRepository,
-                                    onStateChange = { state, msg ->
-                                        hudState = state
-                                        hudMessage = msg
-                                    },
-                                )
-                            }
+                            // A15: warn before importing from an arbitrary URL.
+                            pendingImportUrl = currentUrl
                         },
                         enabled = hudState != HudState.IMPORTING,
                     ) {
@@ -254,6 +249,49 @@ fun MinisSkillsBrowserScreen(
                 }
             }
         }
+    }
+
+    // A15: source-risk warning shown before importing from a URL.
+    pendingImportUrl?.let { url ->
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { pendingImportUrl = null },
+            title = { Text(stringResource(R.string.skill_warning_title)) },
+            text = {
+                Column {
+                    Text(
+                        text = stringResource(R.string.skill_warning_source_url, url),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        text = stringResource(R.string.skill_warning_body),
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                }
+            },
+            confirmButton = {
+                MinisTextButton(onClick = {
+                    pendingImportUrl = null
+                    scope.launch {
+                        importSkillFromCurrentUrl(
+                            context = context,
+                            url = url,
+                            skillRepository = skillRepository,
+                            onStateChange = { state, msg ->
+                                hudState = state
+                                hudMessage = msg
+                            },
+                        )
+                    }
+                }) { Text(stringResource(R.string.skill_warning_import)) }
+            },
+            dismissButton = {
+                MinisTextButton(onClick = { pendingImportUrl = null }) {
+                    Text(stringResource(R.string.skill_warning_deny))
+                }
+            },
+        )
     }
 }
 

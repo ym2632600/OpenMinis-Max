@@ -86,11 +86,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.stringResource
 import com.openminis.app.data.repository.SkillRepository
+import com.openminis.app.data.repository.SkillTrustStore
 import com.openminis.app.ui.markdown.MarkdownText
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -126,6 +128,8 @@ fun SkillsManagementScreen(
     var deleteSkillId by remember { mutableStateOf<String?>(null) }
     var showAddMenu by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
+    // A15: non-bundled skill pending its source-risk approval.
+    var pendingSkillApproval by remember { mutableStateOf<SkillRepository.Skill?>(null) }
     val context = LocalContext.current
 
     // Sort preference — persisted like the file browser's (SharedPreferences,
@@ -318,7 +322,19 @@ fun SkillsManagementScreen(
                                 Spacer(Modifier.width(8.dp))
                                 SettingsSwitch(
                                     checked = skill.isEnabled,
-                                    onCheckedChange = { skillRepository.setEnabled(skill.id, it) },
+                                    onCheckedChange = { on ->
+                                        // A15: enabling a skill from an unknown
+                                        // source asks once; bundled skills and
+                                        // disabling never prompt.
+                                        if (on &&
+                                            skill.importSource != SkillRepository.ImportSource.BUNDLED &&
+                                            !SkillTrustStore.isApproved(skill.id)
+                                        ) {
+                                            pendingSkillApproval = skill
+                                        } else {
+                                            skillRepository.setEnabled(skill.id, on)
+                                        }
+                                    },
                                 )
                             }
                         },
@@ -388,6 +404,50 @@ fun SkillsManagementScreen(
         SkillImportSheet(
             skillRepository = skillRepository,
             onDismiss = { showImportSheet = false },
+        )
+    }
+
+    // A15: source-risk warning before a non-bundled skill first runs.
+    pendingSkillApproval?.let { pending ->
+        AlertDialog(
+            onDismissRequest = { pendingSkillApproval = null },
+            title = { Text(stringResource(R.string.skill_warning_title)) },
+            text = {
+                Column {
+                    Text(
+                        text = pending.name,
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    Text(
+                        text = when (pending.importSource) {
+                            SkillRepository.ImportSource.URL ->
+                                stringResource(R.string.skill_warning_source_url, pending.sourceURL ?: "")
+                            SkillRepository.ImportSource.SESSION -> stringResource(R.string.skill_warning_source_session)
+                            else -> stringResource(R.string.skill_warning_source_file)
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        text = stringResource(R.string.skill_warning_body),
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                }
+            },
+            confirmButton = {
+                MinisTextButton(onClick = {
+                    SkillTrustStore.approve(pending.id)
+                    skillRepository.setEnabled(pending.id, true)
+                    pendingSkillApproval = null
+                }) { Text(stringResource(R.string.skill_warning_approve)) }
+            },
+            dismissButton = {
+                MinisTextButton(onClick = { pendingSkillApproval = null }) {
+                    Text(stringResource(R.string.skill_warning_deny))
+                }
+            },
         )
     }
 
