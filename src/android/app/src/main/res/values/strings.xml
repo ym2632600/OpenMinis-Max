@@ -992,6 +992,9 @@
     <string name="skill_detail_source_session">Session created</string>
     <string name="skills_browser_title">Minis Skills</string>
     <string name="skills_browser_import_button">Import This</string>
+    <string name="skills_browser_share_agent">Share agent</string>
+    <string name="share_agent_bundle_title">Import this agent?</string>
+    <string name="share_agent_bundle_import">Import selected</string>
     <string name="skills_browser_hud_importing">Importing…</string>
     <string name="skills_browser_error_not_folder">Select a skill folder first</string>
     <string name="skills_browser_success_imported">%1$s imported</string>

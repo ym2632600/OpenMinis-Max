@@ -591,6 +591,9 @@
     <string name="skill_detail_source_session">أنشأته جلسة</string>
     <string name="skills_browser_title">مهارات Minis</string>
     <string name="skills_browser_import_button">استيراد هذا</string>
+    <string name="skills_browser_share_agent">مشاركة الوكيل</string>
+    <string name="share_agent_bundle_title">استيراد هذا الوكيل؟</string>
+    <string name="share_agent_bundle_import">استيراد المحدد</string>
     <string name="skills_browser_hud_importing">جارٍ الاستيراد…</string>
     <string name="skills_browser_error_not_folder">اختر مجلد مهارة أولًا</string>
     <string name="skills_browser_success_imported">تم استيراد %1$s</string>

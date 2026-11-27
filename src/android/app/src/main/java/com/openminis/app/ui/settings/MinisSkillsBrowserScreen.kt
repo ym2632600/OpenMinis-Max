@@ -32,6 +32,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -109,6 +110,15 @@ fun MinisSkillsBrowserScreen(
                     }
                 },
                 actions = {
+                    // C11: share this agent (enabled custom skills + GLOBAL.md)
+                    // with a friend as one bundle file.
+                    IconButton(onClick = {
+                        scope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                            runCatching { com.openminis.app.share.AgentShareBundle.share(context) }
+                        }
+                    }) {
+                        Icon(Icons.Filled.Share, contentDescription = stringResource(R.string.skills_browser_share_agent))
+                    }
                     MinisTextButton(
                         onClick = {
                             // A15: warn before importing from an arbitrary URL.

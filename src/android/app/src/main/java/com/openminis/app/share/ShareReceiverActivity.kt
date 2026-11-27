@@ -73,6 +73,18 @@ class ShareReceiverActivity : ComponentActivity() {
             AppLogger.warning(TAG, "provider-JSON detection failed: ${t.message}")
             null
         }
+        // C11: an agent bundle (friend's skills + GLOBAL.md) takes the same
+        // single-item path - receiver approves every included skill.
+        val agentBundle = try {
+            items.singleOrNull()?.let { agentBundleOrNull(it) }
+        } catch (t: Throwable) {
+            AppLogger.warning(TAG, "agent-bundle detection failed: ${t.message}")
+            null
+        }
+        if (agentBundle != null) {
+            if (promptAgentBundleImportOrAttach(agentBundle, items)) return
+        }
+
         if (providerJson != null) {
             // showDialog reports whether the dialog actually reached the
             // screen; if the window manager refused it, fall through so the
@@ -81,6 +93,67 @@ class ShareReceiverActivity : ComponentActivity() {
         }
 
         finishWithAttachmentFlow(items)
+    }
+
+    /**
+     * C11: read the staged file for [item] and return the parsed bundle when
+     * it is an agent-export JSON (magic key + skills array). Same size and
+     * readability guards as the provider-JSON path.
+     */
+    private fun agentBundleOrNull(item: PendingShare.Item): org.json.JSONObject? {
+        if (item.kind != PendingShare.Item.Kind.ATTACHMENT) return null
+        val name = item.value
+        if (!name.endsWith(".json", ignoreCase = true)) return null
+        val file = File(SharedShareStore.sharedFileDirectory(this), name)
+        if (!file.isFile || file.length() > 1_000_000L) return null
+        val text = try {
+            file.readText(Charsets.UTF_8)
+        } catch (e: Exception) {
+            AppLogger.warning(TAG, "agentBundleOrNull read failed: ${e.message}")
+            return null
+        }
+        return AgentShareBundle.parse(text)
+    }
+
+    /**
+     * C11: multi-choice approval dialog - the receiver sees every included
+     * skill (all pre-checked) and installs only what stays checked. Falls
+     * back to the attachment flow when the dialog cannot be shown.
+     */
+    private fun promptAgentBundleImportOrAttach(
+        bundle: org.json.JSONObject,
+        items: List<PendingShare.Item>,
+    ): Boolean {
+        return try {
+            val bundleItems = AgentShareBundle.itemsOf(bundle)
+            if (bundleItems.isEmpty()) return false
+            val titles = bundleItems.map { it.title }.toTypedArray()
+            val checked = BooleanArray(bundleItems.size) { true }
+            android.app.AlertDialog.Builder(this)
+                .setTitle(getString(com.openminis.app.R.string.share_agent_bundle_title))
+                .setMultiChoiceItems(titles, checked) { _, which, isChecked ->
+                    checked[which] = isChecked
+                }
+                .setPositiveButton(getString(com.openminis.app.R.string.share_agent_bundle_import)) { _, _ ->
+                    try {
+                        val approved = bundleItems.filterIndexed { i, _ -> checked[i] }
+                        val count = AgentShareBundle.installApproved(this, approved)
+                        AppLogger.info(TAG, "agent bundle: installed $count/${bundleItems.size} approved item(s)")
+                    } catch (t: Throwable) {
+                        AppLogger.error(TAG, "agent bundle import failed: ${t.message}")
+                    }
+                    finishWithAttachmentFlow(emptyList())
+                }
+                .setNegativeButton(getString(com.openminis.app.R.string.common_cancel)) { _, _ ->
+                    finishWithAttachmentFlow(items)
+                }
+                .setOnCancelListener { finishWithAttachmentFlow(items) }
+                .show()
+            true
+        } catch (t: Throwable) {
+            AppLogger.warning(TAG, "agent bundle dialog failed: ${t.message}")
+            false
+        }
     }
 
     /**
