@@ -2883,4 +2883,20 @@
     <string name="guard_reason_credential">It asks for passwords, card numbers or verification codes</string>
     <string name="guard_reason_urgency">It pressures you to act immediately</string>
     <string name="guard_reason_prize">It promises prizes or money, a classic scam hook</string>
+    <!-- C13: focus mode -->
+    <string name="settings_section_focus">Focus mode</string>
+    <string name="settings_focus_mode">Focus mode</string>
+    <string name="settings_focus_mode_footer">While focus is on, notifications from apps outside your allowlist are held quietly and gathered into one summary when focus ends. Everything stays on the device.</string>
+    <string name="settings_focus_allowed_apps">Allowed apps</string>
+    <string name="settings_focus_allowed_apps_count">%1$d app(s) can still notify you</string>
+    <string name="settings_focus_schedule">Schedule</string>
+    <string name="settings_focus_schedule_value">%1$02d:%2$02d - %3$02d:%4$02d</string>
+    <string name="settings_focus_schedule_off">Manual only</string>
+    <string name="settings_focus_save">Save</string>
+    <string name="consent_scope_focus_mode">Focus mode</string>
+    <string name="consent_scope_focus_mode_desc">Hold and summarize notifications from other apps while you focus</string>
+    <string name="focus_channel_name">Focus mode</string>
+    <string name="focus_channel_description">Batched summary of notifications held while focus mode was on</string>
+    <string name="focus_summary_title">While you focused</string>
+    <string name="focus_summary_body">%1$d notification(s) were held:</string>
 </resources>

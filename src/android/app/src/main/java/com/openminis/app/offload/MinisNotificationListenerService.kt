@@ -40,18 +40,30 @@ class MinisNotificationListenerService : NotificationListenerService() {
         // until the listener has actually observed its own post.
         val key = postKey(sbn.packageName, sbn.id)
         postedLatches.remove(key)?.countDown()
+        val extras = sbn.notification?.extras
+        val notifTitle = extras?.getCharSequence("android.title")?.toString()
+        val notifText = (
+            extras?.getCharSequence("android.bigText")
+                ?: extras?.getCharSequence("android.text")
+            )?.toString()
+        // C13: focus mode - hold notifications from non-allowed apps; the
+        // batched summary goes out when focus ends.
+        val held = try {
+            com.openminis.app.focus.FocusModeManager.holdIfBlocked(
+                sbn.packageName, notifTitle, notifText,
+            ) { runCatching { cancelNotification(sbn.key) } }
+        } catch (t: Throwable) {
+            AppLogger.warning(TAG, "focus hold failed: ${t.message}")
+            false
+        }
         // C1: guard mode - score the notification locally and warn on likely
         // scams. Runs only when the user explicitly enabled guard mode.
-        try {
-            val extras = sbn.notification?.extras
-            val title = extras?.getCharSequence("android.title")?.toString()
-            val text = (
-                extras?.getCharSequence("android.bigText")
-                    ?: extras?.getCharSequence("android.text")
-                )?.toString()
-            com.openminis.app.guard.GuardModeManager.inspect(sbn.packageName, title, text)
-        } catch (t: Throwable) {
-            AppLogger.warning(TAG, "guard inspect failed: ${t.message}")
+        if (!held) {
+            try {
+                com.openminis.app.guard.GuardModeManager.inspect(sbn.packageName, notifTitle, notifText)
+            } catch (t: Throwable) {
+                AppLogger.warning(TAG, "guard inspect failed: ${t.message}")
+            }
         }
     }
 

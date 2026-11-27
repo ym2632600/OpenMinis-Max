@@ -24,12 +24,17 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.BatteryFull
 import androidx.compose.material.icons.outlined.Bolt
 import androidx.compose.material.icons.outlined.BatterySaver
 import androidx.compose.material.icons.outlined.Layers
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.TextButton
 import kotlinx.coroutines.launch
 import androidx.compose.material.icons.outlined.NotificationsActive
 import androidx.compose.material.icons.outlined.PhoneAndroid
@@ -47,6 +52,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -103,6 +109,12 @@ fun BackgroundSettingsScreen(onBack: () -> Unit) {
     val scheduledCountdownLead by backgroundRepo.scheduledCountdownLead.collectAsState()
     val batterySaverEnabled by com.openminis.app.power.BatterySaverManager.enabled.collectAsState()
     val guardModeEnabled by com.openminis.app.guard.GuardModeManager.enabled.collectAsState()
+    val focusModeEnabled by com.openminis.app.focus.FocusModeManager.enabled.collectAsState()
+    val focusAllowed by com.openminis.app.focus.FocusModeManager.allowedPackages.collectAsState()
+    val focusStartMin by com.openminis.app.focus.FocusModeManager.scheduleStartMin.collectAsState()
+    val focusEndMin by com.openminis.app.focus.FocusModeManager.scheduleEndMin.collectAsState()
+    var showFocusAppsDialog by remember { mutableStateOf(false) }
+    val focusConsentTitle = stringResource(R.string.consent_scope_focus_mode)
     val coroutineScope = androidx.compose.runtime.rememberCoroutineScope()
     val guardConsentTitle = stringResource(R.string.consent_scope_guard_monitor)
 
@@ -220,6 +232,74 @@ fun BackgroundSettingsScreen(onBack: () -> Unit) {
                 },
             )
             BgFooter(stringResource(R.string.settings_guard_mode_footer))
+
+            // C13: focus mode - hold non-allowed notifications, batch a summary.
+            Spacer(Modifier.size(8.dp))
+            BgSectionTitle(stringResource(R.string.settings_section_focus))
+            BgToggleRow(
+                icon = Icons.Outlined.NotificationsActive,
+                iconColor = Color(0xFF5856D6),
+                title = stringResource(R.string.settings_focus_mode),
+                checked = focusModeEnabled,
+                onCheckedChange = { on ->
+                    if (on) {
+                        coroutineScope.launch {
+                            val outcome = com.openminis.app.consent.ConsentManager.requireConsent(
+                                com.openminis.app.consent.SensitiveScope.FOCUS_MODE,
+                                focusConsentTitle,
+                            )
+                            if (outcome is com.openminis.app.consent.ConsentManager.ConsentOutcome.Approved ||
+                                outcome is com.openminis.app.consent.ConsentManager.ConsentOutcome.ApprovedAlways
+                            ) {
+                                com.openminis.app.focus.FocusModeManager.setEnabled(true)
+                            }
+                        }
+                    } else {
+                        com.openminis.app.focus.FocusModeManager.setEnabled(false)
+                    }
+                },
+            )
+            Spacer(Modifier.size(8.dp))
+            BgRow(
+                icon = Icons.Outlined.PhoneAndroid,
+                iconColor = Color(0xFF5856D6),
+                title = stringResource(R.string.settings_focus_allowed_apps),
+                subtitle = stringResource(R.string.settings_focus_allowed_apps_count, focusAllowed.size),
+                onClick = { showFocusAppsDialog = true },
+            )
+            Spacer(Modifier.size(8.dp))
+            BgRow(
+                icon = Icons.Outlined.Timer,
+                iconColor = Color(0xFF5856D6),
+                title = stringResource(R.string.settings_focus_schedule),
+                subtitle = if (focusStartMin >= 0 && focusEndMin >= 0) {
+                    stringResource(
+                        R.string.settings_focus_schedule_value,
+                        focusStartMin / 60, focusStartMin % 60,
+                        focusEndMin / 60, focusEndMin % 60,
+                    )
+                } else {
+                    stringResource(R.string.settings_focus_schedule_off)
+                },
+                onClick = {
+                    val startListener = android.app.TimePickerDialog.OnTimeSetListener { _, h, m ->
+                        val endH = if (focusEndMin >= 0) focusEndMin / 60 else 7
+                        val endM = if (focusEndMin >= 0) focusEndMin % 60 else 0
+                        android.app.TimePickerDialog(
+                            context,
+                            { _, eh, em -> com.openminis.app.focus.FocusModeManager.setSchedule(h * 60 + m, eh * 60 + em) },
+                            endH, endM, true,
+                        ).show()
+                    }
+                    android.app.TimePickerDialog(
+                        context, startListener,
+                        if (focusStartMin >= 0) focusStartMin / 60 else 22,
+                        if (focusStartMin >= 0) focusStartMin % 60 else 0,
+                        true,
+                    ).show()
+                },
+            )
+            BgFooter(stringResource(R.string.settings_focus_mode_footer))
 
             // T-bg-overlay phase 2: floating tool-status overlay toggle.
             // Tapping ON without SYSTEM_ALERT_WINDOW deep-links the user to
@@ -380,6 +460,57 @@ fun BackgroundSettingsScreen(onBack: () -> Unit) {
 
             Spacer(Modifier.size(16.dp))
         }
+
+    if (showFocusAppsDialog) {
+        val installed by produceState(initialValue = emptyList<Pair<String, String>>()) {
+            value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                val pm = context.packageManager
+                val intent = android.content.Intent(android.content.Intent.ACTION_MAIN)
+                    .addCategory(android.content.Intent.CATEGORY_LAUNCHER)
+                pm.queryIntentActivities(intent, 0)
+                    .map { it.activityInfo.packageName to it.loadLabel(pm).toString() }
+                    .distinctBy { it.first }
+                    .sortedBy { it.second.lowercase() }
+            }
+        }
+        var selection by remember { mutableStateOf(focusAllowed) }
+        AlertDialog(
+            onDismissRequest = { showFocusAppsDialog = false },
+            title = { Text(stringResource(R.string.settings_focus_allowed_apps)) },
+            text = {
+                LazyColumn {
+                    items(installed) { (pkg, label) ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    selection = if (selection.contains(pkg)) selection - pkg else selection + pkg
+                                }
+                                .padding(vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Checkbox(
+                                checked = selection.contains(pkg),
+                                onCheckedChange = { checked ->
+                                    selection = if (checked) selection + pkg else selection - pkg
+                                },
+                            )
+                            Text(label, fontSize = 14.sp)
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    com.openminis.app.focus.FocusModeManager.setAllowedPackages(selection)
+                    showFocusAppsDialog = false
+                }) { Text(stringResource(R.string.settings_focus_save)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showFocusAppsDialog = false }) { Text(stringResource(android.R.string.cancel)) }
+            },
+        )
+    }
     }
 }
 

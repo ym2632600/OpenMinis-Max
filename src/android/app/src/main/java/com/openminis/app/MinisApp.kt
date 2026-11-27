@@ -274,6 +274,8 @@ class MinisApp : Application(), ImageLoaderFactory {
         com.openminis.app.power.BatterySaverManager.init(this)
         // C1: guard mode (scores notifications locally; active only when enabled).
         com.openminis.app.guard.GuardModeManager.init(this)
+        // C13: focus mode (holds non-allowed notifications; active only when enabled).
+        com.openminis.app.focus.FocusModeManager.init(this)
         // [T-android-tls-trust-error] Localized text for a rejected certificate;
         // LLMError has no Context of its own.
         com.openminis.app.data.model.CertificateErrorText.resolver = { kind, host ->

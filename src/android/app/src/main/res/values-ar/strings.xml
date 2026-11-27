@@ -1220,4 +1220,20 @@
     <string name="guard_reason_credential">يطلب كلمات مرور أو أرقام بطاقات أو رموز تحقق</string>
     <string name="guard_reason_urgency">يضغط عليك للتصرف فورًا</string>
     <string name="guard_reason_prize">يعدك بجوائز أو أموال، وهي طُعم احتيال كلاسيكي</string>
+    <!-- C13: focus mode -->
+    <string name="settings_section_focus">وضع التركيز</string>
+    <string name="settings_focus_mode">وضع التركيز</string>
+    <string name="settings_focus_mode_footer">أثناء التركيز، تُحجب إشعارات التطبيقات خارج قائمتك المسموح بها بهدوء وتُجمع في ملخص واحد عند انتهاء التركيز. كل شيء يبقى على الجهاز.</string>
+    <string name="settings_focus_allowed_apps">التطبيقات المسموح بها</string>
+    <string name="settings_focus_allowed_apps_count">%1$d تطبيق يمكنه إشعارك</string>
+    <string name="settings_focus_schedule">الجدول الزمني</string>
+    <string name="settings_focus_schedule_value">%1$02d:%2$02d - %3$02d:%4$02d</string>
+    <string name="settings_focus_schedule_off">يدوي فقط</string>
+    <string name="settings_focus_save">حفظ</string>
+    <string name="consent_scope_focus_mode">وضع التركيز</string>
+    <string name="consent_scope_focus_mode_desc">حجب إشعارات التطبيقات الأخرى وتلخيصها أثناء تركيزك</string>
+    <string name="focus_channel_name">وضع التركيز</string>
+    <string name="focus_channel_description">ملخص مجمع للإشعارات المحجوبة أثناء وضع التركيز</string>
+    <string name="focus_summary_title">أثناء تركيزك</string>
+    <string name="focus_summary_body">تم حجب %1$d إشعار:</string>
 </resources>
