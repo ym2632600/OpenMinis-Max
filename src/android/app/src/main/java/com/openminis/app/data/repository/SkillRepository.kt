@@ -1829,19 +1829,19 @@ the public internet, other people's devices, or any address outside the private 
       #!/bin/sh
       # safescan: nmap wrapper that only allows private/own-network targets.
       ok=0
-      for a in "\$@"; do
-        case "\$a" in
+      for a in "${'$'}@"; do
+        case "${'$'}a" in
           10.*|192.168.*|172.1[6-9].*|172.2[0-9].*|172.3[0-1].*|100.6[4-9].*|100.[7-9][0-9].*|100.1[0-1][0-9].*|127.*|localhost|*.local|fe80::*)
             ok=1 ;;
           -*)
             ;; # flags are fine
           *)
-            echo "safescan: refusing target '\$a' - only your own network (private ranges) is allowed" >&2
+            echo "safescan: refusing target '${'$'}a' - only your own network (private ranges) is allowed" >&2
             exit 2 ;;
         esac
       done
-      [ "\$ok" = 1 ] || { echo "safescan: give at least one private-range target" >&2; exit 2; }
-      exec nmap "\$@"
+      [ "${'$'}ok" = 1 ] || { echo "safescan: give at least one private-range target" >&2; exit 2; }
+      exec nmap "${'$'}@"
 
 ## Rules
 
