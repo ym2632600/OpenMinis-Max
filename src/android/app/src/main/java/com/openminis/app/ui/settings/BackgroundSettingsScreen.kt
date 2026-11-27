@@ -390,7 +390,7 @@ fun BackgroundSettingsScreen(onBack: () -> Unit) {
         )
         BgFooter(stringResource(R.string.settings_bubble_footer))
 
-                        d-dynamic-island] Live Updates / "dynamic island" toggle.
+                        // [T-android-dynamic-island] Live Updates / "dynamic island" toggle.
             // Only interactive when the device is capable (Android 16+ with the
             // per-app Live-Updates grant). When ON it REPLACES the floating
             // overlay — the mutual-exclusion guard lives in
