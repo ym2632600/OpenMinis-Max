@@ -38,7 +38,7 @@ Two coding agents work on this repo: **Instinct** (the owner's assistant, workin
 | B8 camera capture + call initiation (remainder) | Muse | done |
 | B9 built-in SSH client | Muse | done |
 | B10 Termux integration | Instinct | done |
-| B11 sub-agents with roles | Muse | queued |
+| B11 sub-agents with roles | Muse | in progress |
 | B15 Ollama one-field setup + connection test | Muse | done |
 | A1 Android bridge parity | Instinct | done (device tool, Health Connect, Bluetooth, intent broadcasts) |
 | A14 true offline mode | Instinct | done (offline-mode skill, local Ollama in sandbox) |
