@@ -60,6 +60,7 @@ import com.openminis.app.sandbox.offload.PhotosOffloadHandler
 import com.openminis.app.sandbox.offload.PlayerOffloadHandler
 import com.openminis.app.sandbox.offload.SpeakOffloadHandler
 import com.openminis.app.sandbox.offload.SpeechOffloadHandler
+import com.openminis.app.sandbox.offload.SshOffloadHandler
 import com.openminis.app.sandbox.offload.WeatherOffloadHandler
 import com.openminis.app.service.SessionActivityTracker
 import com.openminis.app.ui.MinisImageFetcher
@@ -786,6 +787,7 @@ class MinisApp : Application(), ImageLoaderFactory {
         NativeOffloadServer.register("android-player", PlayerOffloadHandler())
         NativeOffloadServer.register("android-speak", SpeakOffloadHandler(this))
         NativeOffloadServer.register("android-speech", SpeechOffloadHandler(this))
+                NativeOffloadServer.register("android-ssh", SshOffloadHandler(this))
         NativeOffloadServer.register("android-weather", WeatherOffloadHandler(this))
         // T323: UI-layer automation backed by MinisAccessibilityService.
         NativeOffloadServer.register("android-a11y-cli", AccessibilityOffloadHandler(this))
