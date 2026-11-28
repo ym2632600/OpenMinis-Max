@@ -253,7 +253,7 @@ object HelperRunner {
     // as written already reads as a general sub agent.
     role: com.openminis.app.data.model.SubAgentRole = com.openminis.app.data.model.SubAgentRole.GENERAL,
 ): String {
-    val base = if (args.context.isEmpty() args.task
+    val base = if (args.context.isEmpty()) args.task
     else args.task + "\n\n--- Context from the delegating agent ---\n" + args.context
     if (role == com.openminis.app.data.model.SubAgentRole.GENERAL) return base
     return "You are the ${roleLabel(role)} of a team of sub-agents.\n\n$base"
