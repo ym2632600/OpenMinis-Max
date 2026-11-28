@@ -2681,6 +2681,8 @@
     <string name="consent_scope_send_sms_desc">رسائل نصية تُرسَل من رقمك</string>
     <string name="consent_scope_place_call">إجراء مكالمات هاتفية</string>
     <string name="consent_scope_place_call_desc">يمكن لـ Minis إجراء مكالمات هاتفية بالنيابة عنك.</string>
+    <string name="consent_scope_ssh_exec">تشغيل أوامر على %1$s: %2$s</string>
+    <string name="consent_scope_ssh_exec_desc">يمكن لـ Minis تشغيل أوامر على مضيف بعيد عبر SSH.</string>
     <string name="consent_scope_send_message">إرسال رسائل</string>
     <string name="consent_scope_send_message_desc">رسائل تُرسَل باسمك في تطبيقات أخرى</string>
     <string name="consent_scope_make_purchase">المشتريات والمدفوعات</string>
@@ -2691,6 +2693,24 @@
     <string name="consent_scope_delete_data_desc">حذف ملفات أو رسائل أو بيانات أخرى</string>
     <string name="consent_scope_accessibility_action">التصرف في تطبيقات أخرى</string>
     <string name="consent_scope_accessibility_action_desc">النقر والكتابة والتمرير عبر إمكانية الوصول</string>
+    <!-- B9: built-in SSH client -->
+    <string name="ssh_no_host">لم يُختر مضيف SSH.</string>
+    <string name="ssh_unknown_host">مفتاح مضيف SSH غير معروف (%1$s). وافق على بصمة المفتاح هذه في الإعدادات للاتصال.</string>
+    <string name="ssh_host_key_changed">تغيّر مفتاح المضيف لـ %1$s. رُفض الاتصال.</string>
+    <string name="ssh_auth_failed">فشل توثيق SSH. تحقق من اسم المستخدم والمفتاح.</string>
+    <string name="ssh_connect_failed">تعذّر الاتصال بمضيف SSH: %1$s</string>
+    <string name="ssh_timeout">انتهت مهلة اتصال SSH.</string>
+    <string name="ssh_exec_timeout">انتهت مهلة أمر SSH.</string>
+    <string name="ssh_host_name">اسم المضيف</string>
+    <string name="ssh_host_address">عنوان المضيف</string>
+    <string name="ssh_host_port">المنفذ</string>
+    <string name="ssh_username">اسم المستخدم</string>
+    <string name="ssh_private_key">الصق المفتاح الخاص</string>
+    <string name="ssh_key_passphrase">عبارة مرور المفتاح</string>
+    <string name="ssh_test_connection">اختبار الاتصال</string>
+    <string name="ssh_trust_host_key">الوثوق بمفتاح المضيف</string>
+    <string name="ssh_fingerprint">البصمة</string>
+    <string name="ssh_save_host">حفظ المضيف</string>
     <!-- B14: activity log -->
     <string name="activity_log_title">سجل النشاط</string>
     <string name="settings_activity_log_subtitle">ما فعله الوكيل، مع التراجع عند الإمكان</string>
