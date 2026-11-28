@@ -43,6 +43,8 @@ import com.openminis.app.sandbox.offload.BluetoothOffloadHandler
 import com.openminis.app.sandbox.offload.IntentOffloadHandler
 import com.openminis.app.sandbox.offload.BrowserUseOffloadHandler
 import com.openminis.app.sandbox.offload.CalendarOffloadHandler
+import com.openminis.app.sandbox.offload.CallOffloadHandler
+import com.openminis.app.sandbox.offload.CameraOffloadHandler
 import com.openminis.app.sandbox.offload.ClipboardOffloadHandler
 import com.openminis.app.sandbox.offload.ContactsOffloadHandler
 import com.openminis.app.sandbox.offload.SmsOffloadHandler
@@ -768,6 +770,8 @@ class MinisApp : Application(), ImageLoaderFactory {
         // reachable even before any shell session is launched.
         NativeOffloadServer.register("android-alarm", AlarmOffloadHandler(this))
         NativeOffloadServer.register("android-calendar", CalendarOffloadHandler(this))
+        NativeOffloadServer.register("android-call", CallOffloadHandler(this))
+        NativeOffloadServer.register("android-camera", CameraOffloadHandler(this))
         NativeOffloadServer.register("android-clipboard", ClipboardOffloadHandler(this))
         NativeOffloadServer.register("android-contacts", ContactsOffloadHandler(this))
         NativeOffloadServer.register("android-sms", SmsOffloadHandler(this))
