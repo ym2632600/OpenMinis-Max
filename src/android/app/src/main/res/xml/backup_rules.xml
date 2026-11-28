@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- [T-android-keystore-no-cascade] Keep the encrypted credential stores (and
      their plain-text fallbacks) out of system backup and device transfer.
-     Their Tink keys are wrapped by an AndroidKeyStore key, which is never
+     Their Tink keysets are wrapped by an AndroidKeystore key, which is never
      backed up: a restored copy can only fail to decrypt on the new install,
      and the fallbacks hold secrets in plain text. Every store opened through
      EncryptedPrefsFactory.safeCreate must be listed here
