@@ -780,6 +780,16 @@
     <string name="sub_agent_name_taken">وكيل فرعي آخر يستخدم هذا الاسم.</string>
     <string name="sub_agent_builtin_name">وكيل فرعي عام</string>
     <string name="sub_agent_builtin_description">عمل مفتوح يحتاج حلقة أدوات خاصة: استكشاف قاعدة كود أو الويب عبر جولات عديدة، ثم العودة بالنتائج.</string>
+        <string name="sub_agent_role">الدور</string>
+        <string name="sub_agent_role_general">عام</string>
+        <string name="sub_agent_role_researcher">باحث</string>
+        <string name="sub_agent_role_writer">كاتب</string>
+        <string name="sub_agent_role_reviewer">مراجع</string>
+        <string name="sub_agent_role_coder">مبرمج</string>
+        <string name="sub_agent_role_planner">مخطط</string>
+            <string name="sub_agent_role_footer">اختر دوراً لملء الوصف والتعليمات، ويمكنك تعديلهما بعد ذلك.</string>
+        <string name="sub_agents_deliberation_title">تداول الفريق</string>
+        <string name="sub_agents_deliberation_footer">عند التفعيل، يراجع الوكلاء في نفس المهمة نتائج بعضهم مرة واحدة قبل أن تصلك الإجابة المجمّعة — أي ضعف استهلاك النموذج تقريبًا لمهام الفريق.</string>
     <string name="subagent_detail_succeeded">نجح %1$d</string>
     <string name="subagent_detail_failed">فشل %1$d</string>
     <string name="subagent_detail_tokens">الرموز: %1$s داخل، %2$s خارج</string>
