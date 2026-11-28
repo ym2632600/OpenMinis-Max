@@ -95,6 +95,7 @@ fun SettingsScreen(
     onTailscaleClick: () -> Unit = {},
     onProxiesClick: () -> Unit = {},
     onContainerDnsClick: () -> Unit = {},
+    onSshHostsClick: () -> Unit = {},
     onSkillsClick: () -> Unit = {},
     onTerminalClick: () -> Unit = {},
     onMemoryClick: () -> Unit = {},
@@ -323,6 +324,13 @@ fun SettingsScreen(
                     subtitle = null,
                     onClick = onProxiesClick,
                 )
+                SettingsItem(
+                    icon = Icons.Outlined.Terminal,
+                    iconColor = Color(0xFF007AFF),
+                    title = "SSH hosts",
+                    subtitle = null,
+                    onClick = onSshHostsClick,
+    )
                 SettingsItem(
                     icon = Icons.Outlined.Dns,
                     iconColor = Color(0xFF8E8E93),
