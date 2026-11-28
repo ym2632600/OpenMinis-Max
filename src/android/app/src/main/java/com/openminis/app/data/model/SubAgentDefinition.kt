@@ -1,5 +1,6 @@
 package com.openminis.app.data.model
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.util.UUID
 
@@ -28,6 +29,92 @@ object SubAgentLimits {
 
     /** Child-session only; bounded so one definition cannot eat the child's context. */
     const val INSTRUCTIONS_MAX_LENGTH = 4000
+}
+
+/**
+ * [B11] The role a sub agent plays in a delegation.
+ *
+ * [wire] is the stable, never-localized string written to the provider-config
+ * blob, and also the kotlinx wire name ([SerialName]): an old payload that has
+ * no `role` field decodes to [GENERAL], so existing rosters stay valid. Only
+ * the role labels in the settings UI are localized (see the `sub_agent_role_*`
+ * strings); the wire values and the preset bodies below are English, like
+ * [SubAgentDefinition.BUILT_IN_DESCRIPTION] — the model is not the user.
+ */
+@Serializable
+enum class SubAgentRole(val wire: String) {
+    @SerialName("general") GENERAL("general"),
+    @SerialName("researcher") RESEARCHER("researcher"),
+    @SerialName("writer") WRITER("writer"),
+    @SerialName("reviewer") REVIEWER("reviewer"),
+    @SerialName("coder") CODER("coder"),
+    @SerialName("planner") PLANNER("planner");
+
+    companion object {
+        /** The role for a stored wire value, or null when it names no role. */
+        fun fromWire(wire: String): SubAgentRole? = values().firstOrNull { it.wire == wire }
+    }
+}
+
+/**
+ * [B11] One preset per role: a short description plus the instructions the
+ * child session gets for that role.
+ *
+ * Pure Kotlin and unit-testable: no Android framework, no resources. The
+ * bodies are model-facing English and are never localized — only the role
+ * labels in the settings UI are. A definition keeps its own `instructions`
+ * as well; a preset is the starting text the editor offers for a role.
+ */
+data class SubAgentRolePreset(
+    val role: SubAgentRole,
+    /** Short description, shown wherever a role is picked. */
+    val description: String,
+    /**
+     * Instructions for the child session: the role's identity, what it must
+     * return, and what it must not do.
+     */
+    val instructions: String,
+)
+
+/**
+ * [B11] The preset table: exactly one preset per [SubAgentRole].
+ */
+object SubAgentRolePresets {
+    val all: Map<SubAgentRole, SubAgentRolePreset> = mapOf(
+        SubAgentRole.GENERAL to SubAgentRolePreset(
+            role = SubAgentRole.GENERAL,
+            description = "Open-ended work that needs its own tool loop.",
+            instructions = "You are a general-purpose sub agent. Carry out the delegated task with the tools available to you and return a concise conclusion: what you did, what you found, and anything left undone. Do not take actions outside the delegated task, and do not present guesses as findings.",
+        ),
+        SubAgentRole.RESEARCHER to SubAgentRolePreset(
+            role = SubAgentRole.RESEARCHER,
+            description = "Research a topic and report back with evidence.",
+            instructions = "You are a researcher sub agent. Gather evidence from the sources available to you and return your findings with the sources they come from, distinguishing what is confirmed from what is uncertain. Do not invent sources, and do not present an unverified claim as fact.",
+        ),
+        SubAgentRole.WRITER to SubAgentRolePreset(
+            role = SubAgentRole.WRITER,
+            description = "Draft or revise text in the requested tone and format.",
+            instructions = "You are a writer sub agent. Draft or revise the requested text in the tone and format asked for, and return the finished text. If the request is ambiguous, keep to the brief rather than guessing at new facts. Do not change the meaning of the source material, and do not add facts that were not provided.",
+        ),
+        SubAgentRole.REVIEWER to SubAgentRolePreset(
+            role = SubAgentRole.REVIEWER,
+            description = "Review work critically and report issues with fixes.",
+            instructions = "You are a reviewer sub agent. Read the work you are given critically and return the issues you found, ranked by severity, each with a concrete fix. Do not rewrite the whole work, and do not approve it without checking it.",
+        ),
+        SubAgentRole.CODER to SubAgentRolePreset(
+            role = SubAgentRole.CODER,
+            description = "Write or change code to implement the requested behaviour.",
+            instructions = "You are a coder sub agent. Write or change the code needed to implement the requested behaviour, keeping the change as small as it can be, and return a short summary of what changed and how to verify it. Do not change unrelated code, and do not add behaviour that was not requested.",
+        ),
+        SubAgentRole.PLANNER to SubAgentRolePreset(
+            role = SubAgentRole.PLANNER,
+            description = "Break a task into an ordered plan with risks and dependencies.",
+            instructions = "You are a planner sub agent. Break the task down into ordered steps, noting dependencies and risks, and return the plan. Do not start carrying out the plan, and do not skip a step because it looks hard.",
+        ),
+    )
+
+    /** The preset for [role]; every role has one. */
+    fun presetFor(role: SubAgentRole): SubAgentRolePreset = all.getValue(role)
 }
 
 /**
@@ -93,6 +180,14 @@ data class SubAgentDefinition(
      */
     @kotlinx.serialization.Serializable(with = com.openminis.app.backup.Iso8601MillisSerializer::class)
     var updatedAt: Long = System.currentTimeMillis(),
+    /**
+     * [B11] The role this sub agent plays. The default keeps old payloads
+     * valid: a definition decoded from JSON without a `role` field is
+     * [SubAgentRole.GENERAL], and the built-in stays GENERAL. The wire value
+     * is the stable English string in [SubAgentRole.wire], never localized.
+     * Appended last so existing positional constructions keep working.
+     */
+    var role: SubAgentRole = SubAgentRole.GENERAL,
 ) {
     /**
      * [T-sub-agents-v1] Localized label for the settings list and editor.
@@ -118,6 +213,9 @@ data class SubAgentDefinition(
         name = name.take(SubAgentLimits.NAME_MAX_LENGTH),
         description = description.take(SubAgentLimits.DESCRIPTION_MAX_LENGTH),
         instructions = instructions.take(SubAgentLimits.INSTRUCTIONS_MAX_LENGTH),
+        // A role is an enum: there is nothing to truncate. It rides along
+        // unchanged, so clamping never silently drops a definition's role.
+        role = role,
     )
 
     /** Whether any field was over its limit — used only to decide whether to log. */
