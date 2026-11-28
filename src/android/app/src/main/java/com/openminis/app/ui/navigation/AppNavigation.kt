@@ -40,6 +40,7 @@ import com.openminis.app.ui.settings.AddModelsToGroupScreen
 import com.openminis.app.ui.settings.ShadowVoiceDetailScreen
 import com.openminis.app.ui.settings.AddProviderScreen
 import com.openminis.app.ui.settings.OllamaSetupScreen
+import com.openminis.app.ui.settings.SshHostsScreen
 import com.openminis.app.ui.settings.ModelEntryDetailScreen
 import com.openminis.app.ui.settings.ModelGroupDetailScreen
 import com.openminis.app.ui.settings.ModelGroupsScreen
@@ -97,6 +98,8 @@ object Routes {
     const val ADD_PROVIDER = "add_provider"
     /** B15: one-field Ollama setup (server address + connection test). */
     const val ADD_OLLAMA = "add_ollama"
+    /** B9: SSH hosts settings screen (host list + add/edit + connection test). */
+    const val SSH_HOSTS = "ssh_hosts"
     const val PROVIDER_DETAIL = "provider/{instanceId}"
     /** [T-android-provider-voice] Read-only shadow Voice Service detail. */
     const val SHADOW_VOICE_DETAIL = "voice_service/{instanceId}"
@@ -670,6 +673,7 @@ fun AppNavigation(
                 onTailscaleClick = { navController.safeNavigate(Routes.NETWORK_TAILSCALE) },
                 onProxiesClick = { navController.safeNavigate(Routes.NETWORK_PROXIES) },
                 onContainerDnsClick = { navController.safeNavigate(Routes.CONTAINER_DNS) },
+                onSshHostsClick = { navController.safeNavigate(Routes.SSH_HOSTS) },
                 onSkillsClick = { navController.safeNavigate(Routes.SKILLS) },
                 onTerminalClick = { navController.safeNavigate(Routes.terminal()) },
                 onMemoryClick = { navController.safeNavigate(Routes.MEMORY) },
@@ -979,6 +983,11 @@ fun AppNavigation(
                 onSaved = { navController.safePopBackStack() },
             )
         }
+        composable(Routes.SSH_HOSTS) {
+            SshHostsScreen(
+                onBack = { navController.safePopBackStack() },
+)
+}
 
         composable(
             route = Routes.PROVIDER_DETAIL,
