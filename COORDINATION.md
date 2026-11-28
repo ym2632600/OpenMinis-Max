@@ -36,7 +36,7 @@ Two coding agents work on this repo: **Instinct** (the owner's assistant, workin
 | B14 activity log with undo | Instinct | queued |
 | B5 floating bubble (remainder of B5) | Muse | done |
 | B8 camera capture + call initiation (remainder) | Muse | done |
-| B9 built-in SSH client | Muse | in progress |
+| B9 built-in SSH client | Muse | done |
 | B10 Termux integration | Instinct | done |
 | B11 sub-agents with roles | Muse | queued |
 | B15 Ollama one-field setup + connection test | Muse | done |
