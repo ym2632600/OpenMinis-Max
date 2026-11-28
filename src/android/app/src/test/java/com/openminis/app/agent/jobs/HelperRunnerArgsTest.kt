@@ -132,6 +132,5 @@ fun `result JSON carries the role wire value next to agent`() {
     assertEquals("Researcher", res.getString("agent"))
     val general = JSONObject(HelperRunner.resultJson("completed", "42", "gpt", HelperModelTier.SUB, "sub", 3, 65_000, "C", "J"))
     assertEquals("general", general.getString("role"))
-}
-    
+}    
                      }
