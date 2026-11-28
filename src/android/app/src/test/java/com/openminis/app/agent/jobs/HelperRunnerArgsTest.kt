@@ -110,4 +110,27 @@ class HelperRunnerArgsTest {
         assertNull(HelperRunner.childSessionIdFrom("not json"))
         assertNull(HelperRunner.childSessionIdFrom(HelperRunner.rejectionJson("empty_task", "x")))
     }
-}
+
+    @Test
+    fun `a non-General role is named at the top of the child prompt`() {
+        val args = HelperRunner.parseArgs("""{"task":"A","context":"B"}""")
+        val plain = HelperRunner.childPrompt(args)
+        val p = HelperRunner.childPrompt(args, com.openminis.app.data.model.SubAgentRole.RESEARCHER)
+        assertTrue(p.startsWith("You are the Researcher of a team of sub-agents."))
+        assertTrue(p.endsWith(plain))
+        // GENERAL adds no line: the prompt is the one the child already got.
+        assertEquals(plain, HelperRunner.childPrompt(args, com.openminis.app.data.model.SubAgentRole.GENERAL)}
+                     }
+        
+@Test
+fun `result JSON carries the role wire value next to agent`() {
+    val res = JSONObject(HelperRunner.resultJson(
+        "completed", "42", "gpt", HelperModelTier.SUB, "sub", 3, 65_000, "C", "J",
+        agentName = "Researcher", role = com.openminis.app.data.model.SubAgentRole.RESEARCHER,
+    ))
+    assertEquals("researcher", res.getString("role"))
+    assertEquals("Researcher", res.getString("agent"))
+    val general = JSONObject(HelperRunner.resultJson("completed", "42", "gpt", HelperModelTier.SUB, "sub", 3, 65_000, "C", "J"))
+    assertEquals("general", general.getString("role"))
+}    
+                     }
