@@ -123,14 +123,15 @@ class SubAgentPromptParityTest {
                 id = "custom-1", name = "Researcher",
                 description = "Reads the web.", instructions = "",
                 modelGroupId = "grp-9", isBuiltIn = false, sortOrder = 1,
+            role = com.openminis.app.data.model.SubAgentRole.RESEARCHER,
             ),
         )
         val s = HelperRunner.subAgentRosterSection(roster) { if (it == "grp-9") "Fast Group" else null }
 
         assertTrue(s.startsWith("Available sub agents (pass the name as ${SubAgentDefinition.TOOL_NAME}.agent):"))
         // An unpinned agent is the model's choice to make; a pinned one is not.
-        assertTrue(s.contains("- General Sub Agent — Open-ended work. Model: Auto — you choose with model_choice."))
-        assertTrue(s.contains("- Researcher — Reads the web. Model: fixed — Fast Group."))
+        assertTrue(s.contains("- General Sub Agent — Role: General — Open-ended work. Model: Auto — you choose with model_choice."))
+        assertTrue(s.contains("- Researcher — Role: Researcher — Reads the web. Model: fixed — Fast Group."))
         assertTrue(s.trimEnd().endsWith("Prefer a specific sub agent when its description matches; otherwise use the general one."))
     }
 
