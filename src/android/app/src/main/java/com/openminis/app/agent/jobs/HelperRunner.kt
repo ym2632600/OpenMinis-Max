@@ -242,7 +242,6 @@ object HelperRunner {
         )
     }
 
-
     /** [B11] The English role label the model reads, e.g. RESEARCHER -> "Researcher". */
     fun roleLabel(role: com.openminis.app.data.model.SubAgentRole): String =
         role.wire.replaceFirstChar { it.uppercaseChar() }
