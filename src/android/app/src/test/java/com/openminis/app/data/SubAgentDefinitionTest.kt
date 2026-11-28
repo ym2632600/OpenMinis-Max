@@ -2,6 +2,8 @@ package com.openminis.app.data
 
 import com.openminis.app.data.model.SubAgentDefinition
 import com.openminis.app.data.model.SubAgentLimits
+import com.openminis.app.data.model.SubAgentRole
+import com.openminis.app.data.model.SubAgentRolePresets
 import com.openminis.app.data.model.SubAgentRoster
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -29,12 +31,14 @@ class SubAgentDefinitionTest {
         sortOrder: Int = 0,
         description: String = "d",
         isBuiltIn: Boolean = false,
+        role: SubAgentRole = SubAgentRole.GENERAL,
     ) = SubAgentDefinition(
         id = id,
         name = name,
         description = description,
         sortOrder = sortOrder,
         isBuiltIn = isBuiltIn,
+        role = role,
     )
 
     // ── The built-in always exists and always leads ─────────────────────────
@@ -230,6 +234,64 @@ class SubAgentDefinitionTest {
         // Renamed from delegate_task; agent_status folded in as an action.
         assertEquals("subagent_task", SubAgentDefinition.TOOL_NAME)
     }
+
+    // ── Roles ───────────────────────────────────────────────────────────────
+
+    @Test
+    fun `a definition without an explicit role is GENERAL`() {
+        assertEquals(SubAgentRole.GENERAL, custom("a", "Researcher").role)
+        assertEquals(SubAgentRole.GENERAL, SubAgentDefinition.makeBuiltIn().role)
+    }
+
+    @Test
+    fun `normalize keeps a custom definition's role`() {
+        val out = SubAgentRoster.normalize(
+            listOf(custom("a", "Researcher", role = SubAgentRole.RESEARCHER)),
+        )
+        assertEquals(SubAgentRole.RESEARCHER, out.first { it.id == "a" }.role)
+    }
+
+    @Test
+    fun `clamping keeps a definition's role`() {
+        val got = custom(
+            "a",
+            "Coder",
+            description = "d".repeat(500),
+            role = SubAgentRole.CODER,
+        ).clamped()
+        assertEquals(SubAgentRole.CODER, got.role)
+        assertEquals(SubAgentLimits.DESCRIPTION_MAX_LENGTH, got.description.length)
+    }
+
+    @Test
+    fun `mergeBackup keeps the newer copy's role`() {
+        // The local copy is GENERAL; the newer backup copy is CODER.
+        val local = listOf(custom("a", "Writer").copy(updatedAt = 1000L))
+        val incoming = listOf(
+            custom("a", "Writer", role = SubAgentRole.CODER).copy(updatedAt = 2000L),
+        )
+        val merged = SubAgentRoster.mergeBackup(local, incoming)
+        assertEquals(1, merged.written)
+        assertEquals(SubAgentRole.CODER, merged.roster.first { it.id == "a" }.role)
+    }
+
+    @Test
+    fun `every role has a preset with a description and instructions`() {
+        assertEquals(SubAgentRole.values().size, SubAgentRolePresets.all.size)
+        for (role in SubAgentRole.values()) {
+            val preset = SubAgentRolePresets.presetFor(role)
+            assertEquals(role, preset.role)
+            assertTrue(preset.description.isNotBlank())
+            assertTrue(preset.instructions.isNotBlank())
+        }
+    }
+
+    @Test
+    fun `fromWire maps the stable wire values back to roles`() {
+        assertEquals(SubAgentRole.GENERAL, SubAgentRole.fromWire("general"))
+        assertEquals(SubAgentRole.PLANNER, SubAgentRole.fromWire("planner"))
+        assertNull(SubAgentRole.fromWire("no-such-role"))
+    }
 }
 
 /**
@@ -287,5 +349,27 @@ class SubAgentPersistenceTest {
         val future = """{"id":"a","name":"X","description":"d","futureField":42}"""
         val got = json.decodeFromString<SubAgentDefinition>(future)
         assertEquals("X", got.name)
+    }
+
+    @Test
+    fun `a definition written before roles existed decodes to GENERAL`() {
+        // Old payloads have no `role` key; the default keeps them valid.
+        val legacy = """{"id":"a","name":"X","description":"d"}"""
+        val got = json.decodeFromString<SubAgentDefinition>(legacy)
+        assertEquals(SubAgentRole.GENERAL, got.role)
+    }
+
+    @Test
+    fun `a role round-trips through JSON as its wire value`() {
+        val def = SubAgentDefinition(
+            id = "a",
+            name = "Researcher",
+            description = "Reads a lot",
+            role = SubAgentRole.RESEARCHER,
+        )
+        val encoded = json.encodeToString(SubAgentDefinition.serializer(), def)
+        assertTrue(encoded.contains("\"role\":\"researcher\""))
+        val decoded = json.decodeFromString<SubAgentDefinition>(encoded)
+        assertEquals(SubAgentRole.RESEARCHER, decoded.role)
     }
 }
