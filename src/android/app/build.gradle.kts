@@ -102,6 +102,14 @@ android {
         }
     }
 
+    packaging {
+        resources {
+            // jsch and jspecify both ship this multi-release manifest path;
+            // mergeJavaResource fails on duplicates without an exclusion.
+            excludes += "META-INF/versions/9/OSGI-INF/MANIFEST.MF"
+        }
+    }
+
     buildTypes {
         getByName("debug") {
             buildConfigField("boolean", "DEV_TOOLS", "true")
