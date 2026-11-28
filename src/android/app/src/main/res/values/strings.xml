@@ -2334,6 +2334,16 @@
     <string name="sub_agent_name_taken">Another sub agent already uses that name.</string>
     <string name="sub_agent_builtin_name">General Sub Agent</string>
     <string name="sub_agent_builtin_description">Open-ended work that needs its own tool loop: exploring a codebase or the web over many rounds, digesting bulk output into a conclusion, or running independent branches in parallel.</string>
+        <string name="sub_agent_role">Role</string>
+        <string name="sub_agent_role_general">General</string>
+        <string name="sub_agent_role_researcher">Researcher</string>
+        <string name="sub_agent_role_writer">Writer</string>
+        <string name="sub_agent_role_reviewer">Reviewer</string>
+        <string name="sub_agent_role_coder">Coder</string>
+        <string name="sub_agent_role_planner">Planner</string>
+        <string name="sub_agent_role_footer">Pick a role to fill in a description and instructions you can still edit.</string>
+        <string name="sub_agents_deliberation_title">Team deliberation</string>
+        <string name="sub_agents_deliberation_footer">When on, agents on the same task review each other\'s findings once before you get the combined answer — about twice the model usage for team tasks.</string>
     <string name="agent_model_group_unavailable">Pinned model group unavailable — ran on this conversation\'s model</string>
     <string name="scheduled_card_label">Scheduled task</string>
     <string name="scheduled_card_run">Run %1$d</string>
