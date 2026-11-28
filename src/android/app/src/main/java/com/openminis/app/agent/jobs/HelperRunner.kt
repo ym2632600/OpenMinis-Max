@@ -242,11 +242,24 @@ object HelperRunner {
         )
     }
 
-    /** The prompt the child receives: task + optional verbatim context. */
-    fun childPrompt(args: DelegateTaskArgs): String =
-        if (args.context.isEmpty()) args.task
-        else args.task + "\n\n--- Context from the delegating agent ---\n" + args.context
 
+    /** [B11] The English role label the model reads, e.g. RESEARCHER -> "Researcher". */
+    fun roleLabel(role: com.openminis.app.data.model.SubAgentRole): String =
+        role.wire.replaceFirstChar { it.uppercaseChar() }
+
+        /** The prompt the child receives: task + optional verbatim context. */
+        fun childPrompt(
+                args: DelegateTaskArgs,
+    // [B11] The role the child runs as. GENERAL adds no line: the prompt
+    // as written already reads as a general sub agent.
+    role: com.openminis.app.data.model.SubAgentRole = com.openminis.app.data.model.SubAgentRole.GENERAL,
+): String {
+    val base = if (args.context.isEmpty() args.task
+    else args.task + "\n\n--- Context from the delegating agent ---\n" + args.context
+    if (role == com.openminis.app.data.model.SubAgentRole.GENERAL) return base
+    return "You are the ${roleLabel(role)} of a team of sub-agents.\n\n$base"
+                   }
+            
     /** The child session's title — the one place that spells the prefix. */
     /**
      * [T-sub-agents-v1] `subAgentName` is omitted for the built-in definition,
@@ -395,7 +408,7 @@ object HelperRunner {
             } else {
                 "Auto — you choose with model_choice"
             }
-            lines.add("- ${def.name} — $desc Model: $model.")
+            lines.add("- ${def.name} — Role: ${roleLabel(def.role)} — $desc Model: $model.")
         }
         lines.add("Prefer a specific sub agent when its description matches; otherwise use the general one.")
         return lines.joinToString("\n") + "\n"
@@ -709,6 +722,8 @@ object HelperRunner {
         // modelGroupUnavailable is reported only when true — a pinned group
         // that silently stopped applying is worth saying out loud.
         agentName: String? = null,
+        // [B11] The role this run ran as, as its stable wire value.
+        role: com.openminis.app.data.model.SubAgentRole = com.openminis.app.data.model.SubAgentRole.GENERAL,
         modelOrigin: HelperModelOrigin? = null,
         modelGroupName: String? = null,
         modelGroupUnavailable: Boolean = false,
@@ -779,6 +794,7 @@ object HelperRunner {
         .put("summary", summary)
         .also { if (deliveredAs != null) it.put("delivered_as", deliveredAs) }
         .also { if (!agentName.isNullOrEmpty()) it.put("agent", agentName) }
+        .put("role", role.wire)
         .also { j -> modelOrigin?.let { j.put("model_origin", it.wire) } }
         // [T-android-subagent-model-strategy] The group's own name, so the card
         // can say which group the user configured instead of a bare id.
