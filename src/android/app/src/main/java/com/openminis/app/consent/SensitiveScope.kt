@@ -14,6 +14,7 @@ enum class SensitiveScope(
 ) {
     SEND_SMS(R.string.consent_scope_send_sms, R.string.consent_scope_send_sms_desc),
     PLACE_CALL(R.string.consent_scope_place_call, R.string.consent_scope_place_call_desc),
+    SSH_EXEC(R.string.consent_scope_ssh_exec, R.string.consent_scope_ssh_exec_desc),
     SEND_MESSAGE(R.string.consent_scope_send_message, R.string.consent_scope_send_message_desc),
     MAKE_PURCHASE(R.string.consent_scope_make_purchase, R.string.consent_scope_make_purchase_desc),
     POST_PUBLIC(R.string.consent_scope_post_public, R.string.consent_scope_post_public_desc),

@@ -79,6 +79,8 @@ object OffloadPermissionManager {
         ToolPermissionInfo("call", "Call", PermissionCategory.PRIVACY, PermissionLevel.ASK_ONCE),
         ToolPermissionInfo("photos", "Photos", PermissionCategory.PRIVACY, PermissionLevel.BYPASS),
         ToolPermissionInfo("camera", "Camera", PermissionCategory.PRIVACY, PermissionLevel.BYPASS),
+            ToolPermissionInfo("ssh", "SSH", PermissionCategory.PRIVACY, PermissionLevel.BYPASS),
+            ToolPermissionInfo("ssh_exec", "SSH exec", PermissionCategory.PRIVACY, PermissionLevel.ASK_ONCE),
         // A1: health reads (steps/heart rate/sleep) are medical-grade
         // personal data — default to ASK_ONCE even though the other
         // privacy tools mirror iOS at BYPASS.
