@@ -258,6 +258,30 @@ object HelperRunner {
     if (role == com.openminis.app.data.model.SubAgentRole.GENERAL) return base
     return "You are the ${roleLabel(role)} of a team of sub-agents.\n\n$base"
                    }
+
+    /** [B11] Deliberation: the cap, in characters, on a result shared with another child. */
+        const val DELIBERATION_SHARED_RESULT_MAX_CHARS = 4000
+
+    /** [B11] Truncate a result shared into another child's context to the cap. */
+    fun truncateDeliberationResult(result: String): String =
+        if (result.length <= DELIBERATION_SHARED_RESULT_MAX_CHARS) result else result.take(DELIBERATION_SHARED_RESULT_MAX_CHARS)
+
+    /** [B11] The critique prompt for a deliberation round. */
+    fun buildDeliberationPrompt(ownResult: String, otherResults: List<Pair<String, String>>): String {
+        val others = if (otherResults.isEmpty()) {
+            "(none)"
+        } else {
+            otherResults.joinToString("\n\n") { (agentName, result) ->
+                "- $agentName:\n" + truncateDeliberationResult(result)
+            }
+        }
+        return "Deliberation round: other sub agents have answered the same task. " +
+        "Read their results below and compare them with your own result. " +
+        "Note the agreements, the disagreements, and any errors you spot in their work or in your own.\n\n" +
+        "Your own result:\n" + ownResult + "\n\nResults from other sub agents:\n" + others + "\n\n" +
+        "Now return your REVISED answer in full. Do not return only the changes or a summary of the differences: " +
+        "return the complete revised answer, so it can be used on its own without referring back to your first answer."
+    }
             
     /** The child session's title — the one place that spells the prefix. */
     /**
@@ -759,6 +783,12 @@ object HelperRunner {
          * are merged into the payload.
          */
         termination: SubAgentTermination? = null,
+        // [B11] Deliberation: the team run this result belongs to, and which
+        // deliberation round it is from (1 = first answers, 2 = revised answers
+        // after cross-sharing). Null = not a team run; the markers are then
+        // omitted. The dispatcher wires these in a later commit.
+        teamRunId: String? = null,
+        deliberationRound: Int = 1,
     ): String = JSONObject()
         .put("ok", status == "completed")
         .put("status", status)
@@ -813,6 +843,15 @@ object HelperRunner {
             }
         }
         .also { j -> termination?.putPayload(j) }
+        // [B11] Team-run markers, for the deliberation round-2 tagging in
+        // commit 5. Emitted only for a team run, so a lone run's payload is
+        // byte-unchanged.
+        .also { j ->
+            if (!teamRunId.isNullOrBlank()) {
+                j.put("team_run_id", teamRunId)
+                j.put("deliberation_round", deliberationRound)
+            }
+        }
         .toString()
 
     /**
