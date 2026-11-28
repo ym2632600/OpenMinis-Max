@@ -179,7 +179,7 @@ class PinnedHostKeyRepository(
         // Pinned keys are managed by the app's HostKeyRepository, not by JSch.
     }
 
-    override fun remove(host: String, key: ByteArray) {
+    override fun remove(host: String, type: String?, key: ByteArray) {
         // Pinned keys are managed by the app's HostKeyRepository, not by JSch.
     }
 
